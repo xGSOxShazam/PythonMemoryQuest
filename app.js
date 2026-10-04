@@ -67,6 +67,7 @@ function escapeHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;
 
 let pythonWorker=null;
 let workerReady=false;
+let workerError=null;
 let workerSequence=0;
 const pendingRuns=new Map();
 
@@ -80,8 +81,9 @@ function createPythonWorker(){
   try{
     if(pythonWorker) pythonWorker.terminate();
     workerReady=false;
+    workerError=null;
     setRuntimeStatus("LOADING PYTHON");
-    pythonWorker=new Worker("python-worker.js?v=3",{type:"module"});
+    pythonWorker=new Worker("python-worker.js?v=4",{type:"module"});
     pythonWorker.onmessage=(event)=>{
       const msg=event.data||{};
       if(msg.type==="ready"){
@@ -91,6 +93,7 @@ function createPythonWorker(){
       }
       if(msg.type==="runtime-error" && !msg.id){
         workerReady=false;
+        workerError=new Error(msg.error||"Python runtime could not start in this browser.");
         setRuntimeStatus("PYTHON UNAVAILABLE");
         return;
       }
@@ -104,6 +107,7 @@ function createPythonWorker(){
     };
     pythonWorker.onerror=()=>{
       workerReady=false;
+      workerError=new Error("Python runtime could not start in this browser.");
       setRuntimeStatus("PYTHON UNAVAILABLE");
       for(const pending of pendingRuns.values()){
         clearTimeout(pending.timer);
@@ -115,6 +119,7 @@ function createPythonWorker(){
   }catch(error){
     pythonWorker=null;
     workerReady=false;
+    workerError=error;
     setRuntimeStatus("PYTHON UNAVAILABLE");
     return false;
   }
@@ -128,6 +133,7 @@ function waitForWorkerReady(){
     const started=Date.now();
     const check=()=>{
       if(workerReady)return resolve();
+      if(workerError)return reject(workerError);
       if(Date.now()-started>90000)return reject(new Error("Python took too long to load. Check your connection and refresh the page."));
       setTimeout(check,100);
     };
@@ -167,7 +173,7 @@ function runtimeConfigFor(p){
 function isCodeChallenge(ch){
   return ch.type!=="Predict" && ch.type!=="Explain";
 }
-async function runAnswer(){const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
+async function runAnswer(){if(el("runBtn").disabled)return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
 if(ok&&isCodeChallenge(ch)){
   el("runBtn").disabled=true;
   el("runBtn").textContent="Running Python...";
