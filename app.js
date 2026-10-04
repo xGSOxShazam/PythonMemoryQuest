@@ -317,7 +317,7 @@ function renderBattle(){
   el("nextReward").textContent=missionCleared(p.m)?"Earned: "+levelRewards[p.m].name:"Level reward: "+levelRewards[p.m].name;
   const select=el("skillSelect");select.replaceChildren();
   gear.skills.forEach(skill=>{const option=document.createElement("option");option.value=skill.id;option.textContent=skill.name+" ("+skill.damage+" damage)";select.append(option);});
-  if(!gear.skills.length){const option=document.createElement("option");option.textContent="First skill unlocks after level 2";select.append(option);}
+  if(!gear.skills.length){const option=document.createElement("option");option.value="";option.textContent="First skill unlocks after level 2";select.append(option);}
   if(!gear.skills.some(skill=>skill.id===state.activeSkill))state.activeSkill=gear.skills.length?gear.skills[gear.skills.length-1].id:null;
   select.value=state.activeSkill||"";select.disabled=gear.skills.length<2;
   const skill=gear.skills.find(skill=>skill.id===state.activeSkill);
