@@ -46,6 +46,7 @@ let state=loadState();
 let currentMission=Math.min(state.lastMission||0,missions.length-1);
 let currentChallenge=Math.min(state.lastChallenge||0,missions[currentMission].challenges.length-1);
 let reviewMode=false,reviewQueue=[],hintLevel=0;
+let celebrationTimer=null;
 const el=id=>document.getElementById(id);
 const keyOf=(m,c)=>m+":"+c;
 
@@ -61,6 +62,48 @@ function renderMissionList(){el("missionList").innerHTML="";missions.forEach((m,
 function position(){return reviewMode&&reviewQueue.length?reviewQueue[0]:{m:currentMission,c:currentChallenge};}
 function current(){const p=position();return missions[p.m].challenges[p.c];}
 function render(){el("runBtn").textContent="Run answer";renderMissionList();updateStats();const p=position(),m=missions[p.m],ch=current();hintLevel=0;el("missionMode").textContent=reviewMode?"SPACED REVIEW":"RETRIEVAL PRACTICE";el("missionTitle").textContent=reviewMode?"Review Arena: "+m.title:m.title;el("missionSubtitle").textContent=reviewMode?"An older skill is back. Try it before looking at the clue.":m.subtitle;el("challengeType").textContent=ch.type.toUpperCase();el("prompt").textContent=ch.prompt;el("whyText").textContent=ch.why;el("reward").textContent=reviewMode?Math.round(ch.reward*1.25):ch.reward;el("clueText").textContent="Hidden until you ask for it.";el("clueBox").style.opacity=".58";el("answerInput").value="";el("answerInput").placeholder=ch.placeholder||"";el("feedback").className="feedback";el("feedback").innerHTML='<div class="feedbackIcon">⌁</div><div><strong>Ready.</strong><p>Try from memory first. Getting stuck briefly is part of the training.</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Waiting for your answer...</div>';el("nextBtn").style.display="none";document.querySelectorAll(".methodChip").forEach(c=>c.classList.toggle("current",c.textContent.toLowerCase()===ch.type.toLowerCase()));}
+function celebrate(gain,levelBefore){
+  const layer=el("celebrationLayer");
+  if(!layer)return;
+  clearTimeout(celebrationTimer);
+  layer.replaceChildren();
+  const leveledUp=currentLevel()>levelBefore;
+  const toast=document.createElement("div");
+  toast.className="questToast"+(leveledUp?" levelUp":"");
+  const emblem=document.createElement("span");
+  emblem.className="questEmblem";
+  emblem.setAttribute("aria-hidden","true");
+  emblem.textContent=leveledUp?"★":"✦";
+  const text=document.createElement("div");
+  const title=document.createElement("strong");
+  title.textContent=leveledUp?"LEVEL "+currentLevel()+" UNLOCKED!":gain?"QUEST CLEARED!":"SKILL REFRESHED!";
+  const detail=document.createElement("span");
+  detail.textContent=(gain?"+"+gain+" XP":"Already mastered")+(state.streak>=3?" · "+state.streak+" answer combo!":" · Nice work, adventurer!");
+  text.append(title,detail);
+  toast.append(emblem,text);
+  layer.append(toast);
+  el("celebrationStatus").textContent=title.textContent+" "+detail.textContent;
+  if(!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const rect=el("runBtn").getBoundingClientRect();
+    const x=rect.left+rect.width/2,y=rect.top+rect.height/2;
+    for(let i=0;i<24;i++){
+      const spark=document.createElement("span");
+      spark.className="xpSpark";
+      const angle=(Math.PI*2*i)/24;
+      const distance=65+Math.random()*100;
+      spark.style.left=x+"px";spark.style.top=y+"px";
+      spark.style.setProperty("--dx",Math.cos(angle)*distance+"px");
+      spark.style.setProperty("--dy",Math.sin(angle)*distance-65+"px");
+      spark.style.setProperty("--spin",(Math.random()*540)+"deg");
+      spark.style.setProperty("--spark-color",["var(--cyan)","var(--yellow)","var(--green)","var(--purple)"][i%4]);
+      spark.setAttribute("aria-hidden","true");
+      layer.append(spark);
+    }
+    el("xpStat").animate([{transform:"scale(1)"},{transform:"scale(1.45)",color:"#ffd43b"},{transform:"scale(1)"}],{duration:600});
+    document.querySelector(".avatar").animate([{transform:"translateY(0) rotate(0)"},{transform:"translateY(-9px) rotate(-12deg)"},{transform:"translateY(0) rotate(0)"}],{duration:500});
+  }
+  celebrationTimer=setTimeout(()=>layer.replaceChildren(),3200);
+}
 function scheduleReview(m,c,hard){state.reviews=state.reviews.filter(r=>!(r.m===m&&r.c===c));const delay=hard?15*60*1000:24*60*60*1000;state.reviews.push({m:m,c:c,due:Date.now()+delay});}
 function showHint(){const ch=current();hintLevel++;el("clueBox").style.opacity="1";el("clueText").textContent=ch.clue+(hintLevel>1?"\n\nWrite the smallest correct answer first. Do not make it fancy.":"");}
 function escapeHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");}
@@ -195,12 +238,12 @@ if(ok&&isCodeChallenge(ch)){
     el("runBtn").textContent="Run answer";
   }
 }
-if(ok){el("runBtn").textContent="Run answer";const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.25:ch.reward)*(hintLevel?.8:1));if(first||reviewMode)state.xp+=gain;state.completed[k]=true;state.streak=(state.streak||0)+1;scheduleReview(p.m,p.c,hintLevel||state.attempts[k]>1);save();el("feedback").className="feedback good";el("feedback").innerHTML='<div class="feedbackIcon">✓</div><div><strong>Correct. +'+gain+' XP</strong><p>'+ch.success+'</p></div>';if(runtimeResult){
+if(ok){el("runBtn").textContent="Run answer";const levelBefore=currentLevel();const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.25:ch.reward)*(hintLevel?.8:1));const awarded=first||reviewMode?gain:0;state.xp+=awarded;state.completed[k]=true;state.streak=(state.streak||0)+1;scheduleReview(p.m,p.c,hintLevel||state.attempts[k]>1);save();el("feedback").className="feedback good";el("feedback").innerHTML='<div class="feedbackIcon">✓</div><div><strong>Correct. '+(awarded?"+"+awarded+" XP":"Already mastered.")+'</strong><p>'+ch.success+'</p></div>';if(runtimeResult){
   const printed=(runtimeResult.stdout||"").trim();
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+(printed?escapeHtml(printed):'Program completed successfully.<br><span class="muted">No printed output.</span>')+'</div>';
 }else{
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';
-}el("nextBtn").style.display="block";updateStats();renderMissionList();}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
+}el("nextBtn").style.display="block";updateStats();renderMissionList();celebrate(awarded,levelBefore);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
 function modal(title,text){el("modalTitle").textContent=title;el("modalText").textContent=text;el("modalWrap").style.display="flex";}
 function nextChallenge(){if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;modal("Review complete","You successfully retrieved older material. That repeated recall is what helps it stay available later.");}render();return;}const m=missions[currentMission];if(currentChallenge<m.challenges.length-1){currentChallenge++;}else if(currentMission<missions.length-1){currentMission++;currentChallenge=0;modal("Mission cleared","The next mission introduces something new while older skills continue returning in review.");}else{modal("Core course complete","You finished the foundation path. Keep using Review Arena until the syntax feels automatic, then build small programs without examples.");}state.lastMission=currentMission;state.lastChallenge=currentChallenge;save();render();}
 function startReview(){const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);reviewMode=true;render();}
