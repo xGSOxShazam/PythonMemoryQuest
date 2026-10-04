@@ -34,7 +34,7 @@ function initAdventure(){
 }
 function encounterInfo(c,m=currentMission){
   const type=missions[m].challenges[c].type;
-  if(c===11)return {name:"Region Dragon",icon:"🐉",kind:"dragon"};
+  if(c===11)return {name:m===8?"The Code Dragon":"Region Dragon",icon:"🐉",kind:"dragon"};
   if(type==="Predict")return {name:"Rune Chest",icon:"📦",kind:"chest"};
   if(type==="Debug")return {name:"Glitch Trap",icon:"⚠️",kind:"trap"};
   if(type==="Build")return {name:"Stone Sentinel",icon:"🗿",kind:"sentinel"};
@@ -43,8 +43,8 @@ function encounterInfo(c,m=currentMission){
 }
 function canEnter(c,m=currentMission){return isMissionUnlocked(m)&&(state.completed[keyOf(m,c)]||missions[m].challenges.slice(0,c).every((_,i)=>state.completed[keyOf(m,i)]));}
 function enterEncounter(c){
-  if(reviewMode||el("runBtn").disabled||!canEnter(c))return;
-  currentChallenge=c;state.lastChallenge=c;state.lastMission=currentMission;state.mapPosition={m:currentMission,x:routePoints[c][0],y:routePoints[c][1]};save();render();
+  if(reviewMode||el("runBtn").disabled||lessonBusy||!canEnter(c))return;
+  currentChallenge=c;state.lastChallenge=c;state.lastMission=currentMission;state.mapPosition={m:currentMission,x:routePoints[c][0],y:routePoints[c][1]};save();render();if(learningActive())el("lessonTitle").scrollIntoView({block:"start"});
 }
 function renderAdventure(){
   if(!el("questMap"))return;
@@ -67,7 +67,7 @@ function renderAdventure(){
   if(state.completed[keyOf(p.m,p.c)])el("nextBtn").style.display="block";
 }
 function moveHero(direction){
-  if(reviewMode||el("runBtn").disabled)return;
+  if(reviewMode||el("runBtn").disabled||lessonBusy)return;
   const steps={left:[-1,0],right:[1,0],up:[0,-1],down:[0,1]},step=steps[direction];if(!step)return;
   const pos=state.mapPosition&&state.mapPosition.m===currentMission?state.mapPosition:{m:currentMission,x:routePoints[currentChallenge][0],y:routePoints[currentChallenge][1]};
   state.mapPosition={m:currentMission,x:Math.max(1,Math.min(12,pos.x+step[0])),y:Math.max(1,Math.min(7,pos.y+step[1]))};
@@ -97,18 +97,18 @@ function renderBackpack(){
   el("equipmentSlots").replaceChildren();
   ["staff","robe","charm"].forEach(slot=>{const item=gearItems.find(i=>i.id===equipped[slot]);const div=document.createElement("div");div.className="equipmentSlot";div.innerHTML='<span class="label">'+slot.toUpperCase()+'</span><strong>'+item.icon+' '+item.name+'</strong><small>'+itemStats(item)+'</small>';el("equipmentSlots").append(div);});
   el("inventoryItems").replaceChildren();
-  gearItems.forEach(item=>{const owned=ownedItems().includes(item),active=equipped[item.slot]===item.id;const card=document.createElement("div");card.className="inventoryItem"+(!owned?" itemLocked":"");const text=document.createElement("div");text.innerHTML='<strong>'+item.icon+' '+item.name+'</strong><small>'+itemStats(item)+'</small><p>'+(owned?item.description:"Complete region "+(item.level+1)+" to unlock.")+'</p>';card.append(text);const button=document.createElement("button");button.className="button secondary";button.textContent=active?"Equipped":owned?"Equip":"Locked";button.disabled=!owned||active||el("runBtn").disabled;button.onclick=()=>{if(el("runBtn").disabled||!ownedItems().includes(item))return;state.equipped={...equipmentFor(),[item.slot]:item.id};Object.values(state.battles||{}).forEach(b=>b.hp=Math.min(b.hp,heroGear().maxHp));save();renderBackpack();renderBattle();el("bagMessage").textContent=item.name+" equipped.";};card.append(button);el("inventoryItems").append(card);});
+  gearItems.forEach(item=>{const owned=ownedItems().includes(item),active=equipped[item.slot]===item.id;const card=document.createElement("div");card.className="inventoryItem"+(!owned?" itemLocked":"");const text=document.createElement("div");text.innerHTML='<strong>'+item.icon+' '+item.name+'</strong><small>'+itemStats(item)+'</small><p>'+(owned?item.description:"Complete region "+(item.level+1)+" to unlock.")+'</p>';card.append(text);const button=document.createElement("button");button.className="button secondary";button.textContent=active?"Equipped":owned?"Equip":"Locked";button.disabled=!owned||active||el("runBtn").disabled||lessonBusy;button.onclick=()=>{if(el("runBtn").disabled||lessonBusy||!ownedItems().includes(item))return;state.equipped={...equipmentFor(),[item.slot]:item.id};Object.values(state.battles||{}).forEach(b=>b.hp=Math.min(b.hp,heroGear().maxHp));save();renderBackpack();renderBattle();el("bagMessage").textContent=item.name+" equipped.";};card.append(button);el("inventoryItems").append(card);});
 }
 function exportProgress(){const blob=new Blob([JSON.stringify({game:"PythonMemoryQuest",version:2,state},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download="PythonMemoryQuest-progress.json";link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);el("bagMessage").textContent="Progress backup downloaded.";}
 async function importProgress(event){
   const file=event.target.files[0];event.target.value="";if(!file)return;
-  if(el("runBtn").disabled){el("bagMessage").textContent="Wait for Python to finish before restoring.";return;}
+  if(el("runBtn").disabled||lessonBusy){el("bagMessage").textContent="Wait for Python to finish before restoring.";return;}
   try{
     if(file.size>1000000)throw new Error("This file is too large for a progress backup.");
     const data=JSON.parse(await file.text()),candidate=data.state;
     if(data.game!=="PythonMemoryQuest"||!candidate||!Number.isFinite(candidate.xp)||candidate.xp<0||!candidate.completed||typeof candidate.completed!=="object"||Array.isArray(candidate.completed)||!Array.isArray(candidate.reviews))throw new Error("Choose a Python Memory Quest progress backup.");
     const completed={};Object.entries(candidate.completed).forEach(([k,v])=>{const [m,c]=k.split(":").map(Number);if(/^\d+:\d+$/.test(k)&&missions[m]?.challenges[c]&&v===true)completed[k]=true;});
-    const restored={...defaultState,xp:candidate.xp,completed,attempts:{},streak:Number.isFinite(candidate.streak)?Math.max(0,candidate.streak):0,reviews:candidate.reviews.filter(r=>Number.isInteger(r.m)&&Number.isInteger(r.c)&&missions[r.m]?.challenges[r.c]&&Number.isFinite(r.due)),battles:{},equipped:candidate.equipped&&typeof candidate.equipped==="object"?candidate.equipped:{},skillCharge:Number.isFinite(candidate.skillCharge)?Math.max(0,Math.min(6,candidate.skillCharge)):0,activeSkill:typeof candidate.activeSkill==="string"?candidate.activeSkill:null,adventureVersion:2};
+    const restored={...defaultState,xp:candidate.xp,completed,attempts:{},streak:Number.isFinite(candidate.streak)?Math.max(0,candidate.streak):0,reviews:candidate.reviews.filter(r=>Number.isInteger(r.m)&&Number.isInteger(r.c)&&missions[r.m]?.challenges[r.c]&&Number.isFinite(r.due)),battles:{},equipped:candidate.equipped&&typeof candidate.equipped==="object"?candidate.equipped:{},skillCharge:Number.isFinite(candidate.skillCharge)?Math.max(0,Math.min(6,candidate.skillCharge)):0,lessonDone:Object.fromEntries(Object.entries(candidate.lessonDone||{}).filter(([k,v])=>/^\d+:\d+$/.test(k)&&missions[Number(k.split(":")[0])]?.challenges[Number(k.split(":")[1])]&&v===true)),capstoneVersion:1,activeSkill:typeof candidate.activeSkill==="string"?candidate.activeSkill:null,adventureVersion:2};
     if(!confirm("Restore this backup? Your current progress will be saved separately before replacement."))return;
     localStorage.setItem("pythonMemoryQuestBeforeRestore",JSON.stringify(state));state=restored;currentMission=Math.max(0,missions.findIndex((_,m)=>!missionCleared(m)));currentChallenge=Math.max(0,missions[currentMission].challenges.findIndex((_,c)=>!state.completed[keyOf(currentMission,c)]));state.lastMission=currentMission;state.lastChallenge=currentChallenge;state.equipped=equipmentFor();reviewMode=false;save();render();renderBackpack();el("bagMessage").textContent="Progress restored. Hero health is refreshed for the adventure.";
   }catch(error){el("bagMessage").textContent=error.message||"Could not read that backup.";}

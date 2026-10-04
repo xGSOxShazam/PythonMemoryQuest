@@ -36,3 +36,14 @@ The exact pre-adventure release is preserved at commit `6a485fc2673d49ccabd896d5
 Open **Actions → Publish saved game version → Run workflow**, select **version-1**, and run it to republish the original game. Select **main** to republish the current game. This changes the deployed site without deleting newer source. Future pushes to main publish the current game again through the normal Pages build.
 
 For a permanent code rollback, create a new commit on main restoring the Version 1 tree, preserving Git history. Browser progress is separate: the first Version 2 load saves a one-time copy under `pythonMemoryQuestVersion1State` and keeps the existing active progress key. Back up progress from the Backpack before resetting or changing devices.
+
+
+## Guided adventure (Version 3)
+
+Every encounter now has a **Learn → Try safely → Battle** flow. Professor Py explains the concept in plain language, provides a worked example with narrated steps, and opens an editable real-Python training camp. A practice check gives explanations on wrong answers and unlocks battle on a correct answer. Training never awards battle XP or costs hero HP. Completed encounters remain available for practice; lessons can be revisited without losing the current battle code.
+
+There are 108 guided encounters across nine regions, supported by 47 worked examples. Lessons teach assignment, text and numbers, decisions, collections, loops, functions, dictionary records, exceptions, and objects. Supplied battle variables are visible, and mistake help explains common Python errors.
+
+The final encounter is now the **Code Dragon** capstone: implement a Hero class, a safe damage parser, and a fight function that combines loops, decisions, list inputs, dictionary updates, and printed results. Starter code provides the structure without solving the task. Validation checks victory, surviving dragons, invalid text, nonnegative HP, stopping when the hero falls, empty attacks, and the expected printed result. Existing completion for the old final exercise is reopened for this new capstone while XP and other completion records are preserved.
+
+The pre-teaching game is saved on branch **version-2** at commit `65f79c42c06e660b346fb7551da599ddbe53abc9`. The manual **Publish saved game version** workflow supports `version-1`, `version-2`, and `main`.

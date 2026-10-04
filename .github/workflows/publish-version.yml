@@ -9,6 +9,7 @@ on:
         default: version-1
         options:
           - version-1
+          - version-2
           - main
 permissions:
   contents: read

@@ -6,14 +6,14 @@
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
   <div class="appShell">
     <aside class="sidebar">
       <a class="brand" href="#" aria-label="Python Memory Quest home">
         <span class="logo">Py</span>
-        <span><strong>Python Memory Quest</strong><small>Learn it. Recall it. Use it.</small></span>
+        <span><strong>Python Memory Quest</strong><small>Learn a move. Try it. Win a battle.</small></span>
       </a>
 
       <section class="profileCard">
@@ -49,13 +49,25 @@
         <button id="backpackBtn" class="button secondary">🎒 Backpack &amp; equipment</button>
       </header>
 
+      <section id="lessonPanel" class="card lessonPanel" aria-labelledby="lessonTitle">
+        <div class="lessonHeader"><span class="mentorPortrait" aria-hidden="true">🧙</span><div><div class="label">YOUR GUIDE · PROFESSOR PY</div><h2 id="lessonTitle"></h2><p id="lessonProgress"></p></div></div>
+        <div class="lessonRoad"><span id="lessonLearnTab" class="active">1 · Learn</span><span id="lessonTryTab">2 · Try safely</span><span>3 · Battle</span></div>
+        <div id="lessonReadPane"><p id="welcomeStory" class="welcomeStory" hidden>Welcome, adventurer! The Code Dragon has scrambled the kingdom. Professor Py will teach you Python—a language for giving a computer instructions. Learn one move, try it safely, then use it to clear an encounter. Each region teaches a new skill for your final showdown.</p><p id="lessonIdea" class="lessonIdea"></p><div class="lessonRule"><strong>How to use it</strong><p id="lessonUse"></p></div>
+          <div class="lessonExampleLayout"><div><div class="label">A WORKED EXAMPLE</div><pre id="lessonExample" class="lessonExample"></pre></div><div class="lessonTraceCard"><span id="lessonStepCount" class="label"></span><p id="lessonTrace" aria-live="polite"></p><div class="lessonStepButtons"><button id="lessonResetSteps" class="button secondary">Start steps over</button><button id="lessonNextStep" class="button secondary">Show next step</button></div></div></div>
+          <div id="bossPlan" class="bossPlan" hidden><strong>Your final mission plan</strong><ol><li>Build the Hero class and its take_hit method.</li><li>Parse text damage safely with try/except.</li><li>Loop through attacks, update the dragon dictionary, and decide when the battle ends.</li><li>Print the result. Test victory, defeat, and invalid input.</li></ol></div>
+          <button id="lessonTryBtn" class="button primary">Try it in the training camp →</button>
+        </div>
+        <div id="lessonTryPane" hidden><div class="playgroundIntro"><h3>Experiment in the training camp</h3><p>Change a value or a line and see what happens. Your hero is safe here.</p></div><div class="lessonSandbox"><div><label for="lessonCodeInput" class="label">YOUR EXPERIMENT · PYTHON</label><textarea id="lessonCodeInput" spellcheck="false" autocapitalize="off" aria-label="Practice Python code"></textarea><div class="sandboxActions"><button id="lessonResetDemo" class="button secondary">Restore example</button><button id="lessonRunDemo" class="button primary">Run experiment</button></div></div><pre id="lessonDemoOutput" class="lessonDemoOutput" role="status"></pre></div>
+          <div class="lessonCheck"><h3 id="lessonQuestion"></h3><div id="lessonOptions" class="lessonOptions"></div><p id="lessonCheckFeedback" class="lessonCheckFeedback" role="status"></p></div><div class="lessonBottomActions"><button id="lessonBackBtn" class="button secondary">← Read the lesson again</button><button id="lessonEnterBattle" class="button primary" disabled>I'm ready — enter battle ⚔</button></div>
+        </div>
+      </section>
       <section id="adventurePanel" class="card adventurePanel" aria-label="Adventure map">
-        <div class="mapHeading"><div><div class="label">PYTHON KINGDOM · VERSION 2</div><h2 id="regionName">Variable Vale</h2></div><span id="mapProgress"></span></div>
+        <div class="mapHeading"><div><div class="label">PYTHON KINGDOM · GUIDED ADVENTURE</div><h2 id="regionName">Variable Vale</h2></div><span id="mapProgress"></span></div>
         <p id="mapHelp">Walk with arrow keys or WASD, or click an encounter. Solve its Python challenge to clear the route.</p>
         <div id="questMap" class="questMap" tabindex="0" role="group" aria-label="Walkable encounter map"></div>
         <div class="mapFooter"><span id="encounterName" role="status"></span><div class="movePad" aria-label="Movement controls"><button data-move="left" aria-label="Move left">←</button><button data-move="up" aria-label="Move up">↑</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button></div></div>
       </section>
-      <div class="workspace">
+      <div id="battleWorkspace" class="workspace">
         <section class="card challengeCard">
           <div class="challengeHead">
             <div>
@@ -66,6 +78,8 @@
             <div class="xpPill">+<span id="reward">100</span> XP</div>
           </div>
 
+          <div class="battleLearningTools"><button id="revisitLesson" class="button secondary">Revisit this lesson</button><button id="battleStarter" class="button secondary" hidden>Load boss starter code</button></div>
+          <div id="battleContext" class="battleContext" hidden><strong>The game already supplies these values</strong><pre id="battleContextCode"></pre></div>
           <div class="methodRow" aria-label="Learning method">
             <span class="methodChip">Recall</span>
             <span class="methodChip">Predict</span>
@@ -91,9 +105,10 @@
 
           <div id="feedback" class="feedback" aria-live="polite">
             <div class="feedbackIcon">⌁</div>
-            <div><strong>Ready.</strong><p>Try from memory first. Getting stuck briefly is part of the training.</p></div>
+            <div><strong>Ready.</strong><p>Use the move you learned. If you get stuck, your guide can help.</p></div>
           </div>
 
+          <div class="mistakeSupport"><p id="coachAdvice" hidden role="status"></p><button id="mistakeCoach" class="button secondary" hidden>Help me understand this mistake</button></div>
           <button id="nextBtn" class="button nextButton">Next challenge</button>
         </section>
 
@@ -125,7 +140,7 @@
 
       <footer>
         <strong>Python Memory Quest</strong>
-        <span>Practice real fundamentals through active recall.</span>
+        <span>Rescue the kingdom by learning real Python.</span>
       </footer>
     </main>
   </div>
@@ -179,10 +194,11 @@
     <div class="saveTools"><button id="exportSave" class="button secondary">Download progress backup</button><label class="button secondary" for="importSave">Restore progress backup</label><input id="importSave" type="file" accept="application/json,.json" hidden></div><p id="bagMessage" role="status"></p>
   </dialog>
   <script src="challenges.js?v=1"></script>
-  <script src="adventure.js?v=1"></script>
+  <script src="adventure.js?v=2"></script>
+  <script src="lessons.js?v=1"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=13"></script>
+  <script src="app.js?v=14"></script>
 </body>
 </html>
