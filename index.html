@@ -6,7 +6,7 @@
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
   <div class="appShell">
@@ -30,7 +30,7 @@
         <div class="progressTrack"><div id="progressFill"></div></div>
       </section>
 
-      <div class="sideLabel">BOSS LEVELS · 12 CHALLENGES EACH</div>
+      <div class="sideLabel">REGIONS · 12 ENCOUNTERS EACH</div>
       <nav id="missionList" class="missionList" aria-label="Python missions"></nav>
 
       <div class="sidebarActions">
@@ -46,9 +46,15 @@
           <h1 id="missionTitle">Variables</h1>
           <p id="missionSubtitle">Build the skill, then prove you can recall it without copying.</p>
         </div>
-        <div class="heroBadge">Free Python practice</div>
+        <button id="backpackBtn" class="button secondary">🎒 Backpack &amp; equipment</button>
       </header>
 
+      <section id="adventurePanel" class="card adventurePanel" aria-label="Adventure map">
+        <div class="mapHeading"><div><div class="label">PYTHON KINGDOM · VERSION 2</div><h2 id="regionName">Variable Vale</h2></div><span id="mapProgress"></span></div>
+        <p id="mapHelp">Walk with arrow keys or WASD, or click an encounter. Solve its Python challenge to clear the route.</p>
+        <div id="questMap" class="questMap" tabindex="0" role="group" aria-label="Walkable encounter map"></div>
+        <div class="mapFooter"><span id="encounterName" role="status"></span><div class="movePad" aria-label="Movement controls"><button data-move="left" aria-label="Move left">←</button><button data-move="up" aria-label="Move up">↑</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button></div></div>
+      </section>
       <div class="workspace">
         <section class="card challengeCard">
           <div class="challengeHead">
@@ -133,7 +139,7 @@
     </div>
   </div>
 
-  <section id="battleDock" class="battleDock" aria-label="Dragon battle">
+  <section id="battleDock" class="battleDock" aria-label="Encounter battle">
     <div class="battleInfo">
       <div id="battleLabel" class="battleLabel">LEVEL 1 · VARIABLES</div>
       <strong id="battleProgress">0 / 12 challenges cleared</strong>
@@ -156,8 +162,8 @@
     <div class="battleVitals">
       <div class="hpLabel"><strong>YOUR HERO</strong><span id="heroHpText">100 / 100 HP</span></div>
       <div id="heroHpBar" class="hpTrack" role="progressbar" aria-label="Hero health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="heroHpFill"></div></div>
-      <div class="hpLabel bossLabel"><strong>THE DRAGON</strong><span id="bossHpText">120 / 120 HP</span></div>
-      <div id="bossHpBar" class="hpTrack bossHp" role="progressbar" aria-label="Dragon health" aria-valuemin="0" aria-valuemax="120" aria-valuenow="120"><div id="bossHpFill"></div></div>
+      <div class="hpLabel bossLabel"><strong id="enemyName">THE ENEMY</strong><span id="bossHpText">120 / 120 HP</span></div>
+      <div id="bossHpBar" class="hpTrack bossHp" role="progressbar" aria-label="Enemy health" aria-valuemin="0" aria-valuemax="120" aria-valuenow="120"><div id="bossHpFill"></div></div>
       <div id="skillControls" class="skillControls">
         <label for="skillSelect" class="srOnly">Combat skill</label>
         <select id="skillSelect" aria-label="Combat skill"><option>First skill unlocks after level 2</option></select>
@@ -167,10 +173,16 @@
       </div>
     </div>
   </section>
+  <dialog id="backpackDialog" class="backpackDialog" aria-labelledby="backpackTitle">
+    <div class="bagHeading"><div><div class="label">YOUR ADVENTURER</div><h2 id="backpackTitle">Backpack &amp; equipment</h2></div><button id="closeBackpack" class="button secondary">Close</button></div>
+    <div class="equipmentLayout"><div class="heroPreview"><div id="equipmentHero"></div><strong id="equipmentStats"></strong><p>Choose a staff, robe, and charm. Old items stay in your backpack.</p></div><div><div id="equipmentSlots" class="equipmentSlots"></div><h3>Backpack</h3><div id="inventoryItems" class="inventoryItems"></div></div></div>
+    <div class="saveTools"><button id="exportSave" class="button secondary">Download progress backup</button><label class="button secondary" for="importSave">Restore progress backup</label><input id="importSave" type="file" accept="application/json,.json" hidden></div><p id="bagMessage" role="status"></p>
+  </dialog>
   <script src="challenges.js?v=1"></script>
+  <script src="adventure.js?v=1"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=11"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>
