@@ -6,7 +6,7 @@
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=6">
+  <link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
   <div class="appShell">
@@ -34,20 +34,32 @@
       <nav id="missionList" class="missionList" aria-label="Python missions"></nav>
 
       <div class="sidebarActions">
+        <button id="villageBtn" class="sideButton">🏡 Village home</button>
         <button id="reviewBtn" class="sideButton">Review Arena <span id="dueCount">0</span></button>
         <button id="resetBtn" class="sideButton subtle">Reset progress</button>
       </div>
     </aside>
 
     <main class="main">
+      <section id="villageView" class="villageView" aria-labelledby="villageTitle">
+        <div class="villageHeading"><div><div class="eyebrow">YOUR HOME IN THE PYTHON KINGDOM</div><h1 id="villageTitle">Welcome to Lantern Village</h1><p id="villageGreeting"></p></div><button id="villageBag" class="button secondary">🎒 Backpack</button></div>
+        <div id="villageScene" class="villageScene" aria-label="Your growing village"></div>
+        <div class="villageSummary"><span id="villageGrowth"></span><span id="villageNextUnlock"></span></div>
+        <div class="homeGrid"><section class="card nextQuestCard"><div class="label">YOUR NEXT SHORT ADVENTURE</div><h2 id="homeQuestTitle"></h2><p id="homeQuestStory"></p><div id="homeQuestSteps" class="homeQuestSteps"></div><div class="questReward"><span id="homeQuestReward"></span><span>3 encounters · play at your own pace</span></div><button id="continueQuest" class="button primary">Begin your adventure →</button><p class="savedNote">Your progress and unfinished code are saved on this browser.</p></section>
+        <section class="card roomCard"><div class="label">MAKE THIS PLACE YOURS</div><h2>Your hero &amp; room</h2><div id="roomPreview" class="roomPreview"><div id="villageAvatar"></div><div id="roomDecor"></div></div><div class="label">ROBE COLOR</div><div id="heroColors" class="cosmeticChoices"></div><div class="label">ROOM STYLE</div><div id="roomStyles" class="cosmeticChoices"></div><p id="cosmeticMessage" role="status"></p></section></div>
+        <section class="card villageRequests"><div class="label">VILLAGERS NEED YOUR PYTHON SKILLS</div><h2>Help around the village</h2><div id="villageJobs" class="villageJobs"></div></section>
+      </section>
+      <section id="campfireView" class="card campfireView" hidden aria-labelledby="campfireTitle"><div class="eyebrow">A GOOD PLACE TO REST</div><div class="campfireArt" aria-hidden="true">🌲 <span>🔥</span> ⛺</div><h1 id="campfireTitle">Quest complete!</h1><p id="campfireStory"></p><div id="campfireReward" class="campfireReward"></div><p>Your progress is saved. Rest now, or take on the next short adventure.</p><div class="campfireActions"><button id="campfireHome" class="button secondary">Return to the village</button><button id="campfireContinue" class="button primary">Continue your adventure →</button></div></section>
+      <div id="gameView" hidden>
       <header class="hero">
         <div>
           <div id="missionMode" class="eyebrow">RETRIEVAL PRACTICE</div>
           <h1 id="missionTitle">Variables</h1>
           <p id="missionSubtitle">Build the skill, then prove you can recall it without copying.</p>
         </div>
-        <button id="backpackBtn" class="button secondary">🎒 Backpack &amp; equipment</button>
+        <div class="gameHeaderActions"><button id="gameHomeBtn" class="button secondary">🏡 Village</button><button id="backpackBtn" class="button secondary">🎒 Backpack &amp; equipment</button></div>
       </header>
+      <div id="questRibbon" class="questRibbon"><div><span class="label">SHORT QUEST</span><strong id="questRibbonTitle"></strong></div><span id="questRibbonProgress"></span></div>
 
       <section id="lessonPanel" class="card lessonPanel" aria-labelledby="lessonTitle">
         <div class="lessonHeader"><span class="mentorPortrait" aria-hidden="true">🧙</span><div><div class="label">YOUR GUIDE · PROFESSOR PY</div><h2 id="lessonTitle"></h2><p id="lessonProgress"></p></div></div>
@@ -57,7 +69,7 @@
           <div id="bossPlan" class="bossPlan" hidden><strong>Your final mission plan</strong><ol><li>Build the Hero class and its take_hit method.</li><li>Parse text damage safely with try/except.</li><li>Loop through attacks, update the dragon dictionary, and decide when the battle ends.</li><li>Print the result. Test victory, defeat, and invalid input.</li></ol></div>
           <button id="lessonTryBtn" class="button primary">Try it in the training camp →</button>
         </div>
-        <div id="lessonTryPane" hidden><div class="playgroundIntro"><h3>Experiment in the training camp</h3><p>Change a value or a line and see what happens. Your hero is safe here.</p></div><div class="lessonSandbox"><div><label for="lessonCodeInput" class="label">YOUR EXPERIMENT · PYTHON</label><textarea id="lessonCodeInput" spellcheck="false" autocapitalize="off" aria-label="Practice Python code"></textarea><div class="sandboxActions"><button id="lessonResetDemo" class="button secondary">Restore example</button><button id="lessonRunDemo" class="button primary">Run experiment</button></div></div><pre id="lessonDemoOutput" class="lessonDemoOutput" role="status"></pre></div>
+        <div id="lessonTryPane" hidden><div class="playgroundIntro"><h3>Experiment in the training camp</h3><p>Change a value or a line and see what happens. Your hero is safe here.</p></div><div class="lessonSandbox"><div><label for="lessonCodeInput" class="label">YOUR EXPERIMENT · PYTHON</label><textarea id="lessonCodeInput" spellcheck="false" autocapitalize="off" aria-label="Practice Python code"></textarea><div class="sandboxActions"><button id="lessonResetDemo" class="button secondary">Restore example</button><button id="lessonRunDemo" class="button primary">Run experiment</button></div></div><div><div id="codeWorld" class="codeWorld" aria-label="Your code changes the game world"><div class="label">YOUR CODE IN THE WORLD</div><div id="codeWorldScene" class="codeWorldScene"></div><p id="codeWorldCaption" role="status"></p></div><pre id="lessonDemoOutput" class="lessonDemoOutput" role="status"></pre></div></div>
           <div class="lessonCheck"><h3 id="lessonQuestion"></h3><div id="lessonOptions" class="lessonOptions"></div><p id="lessonCheckFeedback" class="lessonCheckFeedback" role="status"></p></div><div class="lessonBottomActions"><button id="lessonBackBtn" class="button secondary">← Read the lesson again</button><button id="lessonEnterBattle" class="button primary" disabled>I'm ready — enter battle ⚔</button></div>
         </div>
       </section>
@@ -142,6 +154,7 @@
         <strong>Python Memory Quest</strong>
         <span>Rescue the kingdom by learning real Python.</span>
       </footer>
+      </div>
     </main>
   </div>
 
@@ -194,11 +207,12 @@
     <div class="saveTools"><button id="exportSave" class="button secondary">Download progress backup</button><label class="button secondary" for="importSave">Restore progress backup</label><input id="importSave" type="file" accept="application/json,.json" hidden></div><p id="bagMessage" role="status"></p>
   </dialog>
   <script src="challenges.js?v=1"></script>
-  <script src="adventure.js?v=2"></script>
-  <script src="lessons.js?v=1"></script>
+  <script src="adventure.js?v=3"></script>
+  <script src="lessons.js?v=2"></script>
+  <script src="village.js?v=1"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=14"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>

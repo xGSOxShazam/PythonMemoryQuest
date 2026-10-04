@@ -135,6 +135,7 @@ function renderTeaching(){
   el('battleContext').hidden=!current().runtime?.setup;el('battleContextCode').textContent=current().runtime?.setup||'';
   el('coachAdvice').hidden=true;el('mistakeCoach').hidden=true;
   el('bossPlan').hidden=!(p.m===8&&p.c===11);
+  renderCodeWorld();renderVillageShell();
 }
 function renderLessonTrace(){
   const lesson=lessonFor(position());el('lessonExample').textContent=lesson.code;
@@ -145,8 +146,8 @@ async function runLessonDemo(){
   if(lessonBusy||el('runBtn').disabled)return;
   const code=el('lessonCodeInput').value;if(!code.trim()){el('lessonDemoOutput').textContent='Write some code first, or restore the example.';return;}
   lessonBusy=true;el('lessonRunDemo').disabled=true;el('lessonRunDemo').textContent='Running Python…';el('lessonEnterBattle').disabled=true;
-  try{const result=await executePython(code);el('lessonDemoOutput').textContent=result.ok?(result.stdout.trim()||'Your program ran. Add print(...) to show a value.'):'No HP lost. '+friendlyError(result.stderr)+'\n\n'+result.stderr;}
-  catch(error){el('lessonDemoOutput').textContent='No HP lost. '+error.message;}
+  try{const result=await executePython(code);renderCodeWorld(result);el('lessonDemoOutput').textContent=result.ok?(result.stdout.trim()||'Your program ran. Add print(...) to show a value.'):'No HP lost. '+friendlyError(result.stderr)+'\n\n'+result.stderr;}
+  catch(error){renderCodeWorld({ok:false});el('lessonDemoOutput').textContent='No HP lost. '+error.message;}
   finally{lessonBusy=false;el('lessonRunDemo').disabled=false;el('lessonRunDemo').textContent='Run experiment';el('lessonEnterBattle').disabled=!lessonChoicePassed;}
 }
 function friendlyError(stderr){

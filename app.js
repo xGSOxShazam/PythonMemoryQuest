@@ -75,10 +75,10 @@ function currentLevel(){const next=missions.findIndex((m,i)=>!m.challenges.every
 function rank(){const l=Math.floor(state.xp/500)+1;if(l>=7)return "Python Builder";if(l>=5)return "Python Explorer";if(l>=3)return "Python Apprentice";return "Python Rookie";}
 function updateStats(){el("xpStat").textContent=state.xp;el("levelStat").textContent=currentLevel();el("rankLabel").textContent=rank();el("streakStat").textContent=state.streak||0;const pct=Math.round(completedCount()/totalChallenges()*100);el("progressText").textContent=pct+"%";el("progressFill").style.width=pct+"%";el("dueCount").textContent=state.reviews.filter(r=>r.due<=Date.now()).length;renderBattle();}
 function isMissionUnlocked(i){if(i===0)return true;return missions[i-1].challenges.every((_,c)=>state.completed[keyOf(i-1,c)]);}
-function renderMissionList(){el("missionList").innerHTML="";missions.forEach((m,i)=>{const b=document.createElement("button");const done=m.challenges.every((_,c)=>state.completed[keyOf(i,c)]);b.className="missionBtn"+(i===currentMission&&!reviewMode?" active":"")+(isMissionUnlocked(i)?"":" locked")+(done?" done":"");b.innerHTML='<span class="missionNum">'+(done?"✓":String(i+1).padStart(2,"0"))+'</span><span>'+m.title+'</span>';b.onclick=()=>{if(el("runBtn").disabled||lessonBusy||!isMissionUnlocked(i))return;reviewMode=false;state.mapPosition=null;currentMission=i;currentChallenge=Math.max(0,m.challenges.findIndex((_,c)=>!state.completed[keyOf(i,c)]));state.lastMission=i;state.lastChallenge=currentChallenge;save();render();if(learningActive())el("lessonTitle").scrollIntoView({block:"start"});};el("missionList").appendChild(b);});}
+function renderMissionList(){el("missionList").innerHTML="";missions.forEach((m,i)=>{const b=document.createElement("button");const done=m.challenges.every((_,c)=>state.completed[keyOf(i,c)]);b.className="missionBtn"+(i===currentMission&&!reviewMode?" active":"")+(isMissionUnlocked(i)?"":" locked")+(done?" done":"");b.innerHTML='<span class="missionNum">'+(done?"✓":String(i+1).padStart(2,"0"))+'</span><span>'+m.title+'</span>';b.onclick=()=>{if(el("runBtn").disabled||lessonBusy||!isMissionUnlocked(i))return;saveBattleDraft();gameScreen="adventure";state.campfire=null;reviewMode=false;state.mapPosition=null;currentMission=i;currentChallenge=Math.max(0,m.challenges.findIndex((_,c)=>!state.completed[keyOf(i,c)]));state.lastMission=i;state.lastChallenge=currentChallenge;save();render();if(learningActive())el("lessonTitle").scrollIntoView({block:"start"});};el("missionList").appendChild(b);});}
 function position(){return reviewMode&&reviewQueue.length?reviewQueue[0]:{m:currentMission,c:currentChallenge};}
 function current(){const p=position();return missions[p.m].challenges[p.c];}
-function render(){renderAdventure();el("runBtn").textContent="Run answer";renderMissionList();updateStats();const p=position(),m=missions[p.m],ch=current();hintLevel=0;el("missionMode").textContent=reviewMode?"SPACED REVIEW":"RETRIEVAL PRACTICE";el("missionTitle").textContent=reviewMode?"Review Arena: "+m.title:m.title;el("missionSubtitle").textContent=reviewMode?"An older skill is back. Try it before looking at the clue.":m.subtitle;el("challengeType").textContent=ch.type.toUpperCase()+" · CHALLENGE "+(p.c+1)+" / "+m.challenges.length;el("prompt").textContent=ch.prompt;el("whyText").textContent=ch.why;el("reward").textContent=reviewMode?Math.round(ch.reward*1.25):ch.reward;el("clueText").textContent="Hidden until you ask for it.";el("clueBox").style.opacity=".58";el("answerInput").value="";el("answerInput").placeholder=ch.placeholder||"";el("feedback").className="feedback";el("feedback").innerHTML='<div class="feedbackIcon">⌁</div><div><strong>Ready.</strong><p>Use the move you learned. If you get stuck, your guide can help.</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Waiting for your answer...</div>';el("nextBtn").style.display=state.completed[keyOf(p.m,p.c)]?"block":"none";document.querySelectorAll(".methodChip").forEach(c=>c.classList.toggle("current",c.textContent.toLowerCase()===ch.type.toLowerCase()));renderTeaching();}
+function render(){renderAdventure();el("runBtn").textContent="Run answer";renderMissionList();updateStats();const p=position(),m=missions[p.m],ch=current();hintLevel=0;el("missionMode").textContent=reviewMode?"SPACED REVIEW":"RETRIEVAL PRACTICE";el("missionTitle").textContent=reviewMode?"Review Arena: "+m.title:m.title;el("missionSubtitle").textContent=reviewMode?"An older skill is back. Try it before looking at the clue.":m.subtitle;el("challengeType").textContent=ch.type.toUpperCase()+" · CHALLENGE "+(p.c+1)+" / "+m.challenges.length;el("prompt").textContent=ch.prompt;el("whyText").textContent=ch.why;el("reward").textContent=reviewMode?Math.round(ch.reward*1.25):ch.reward;el("clueText").textContent="Hidden until you ask for it.";el("clueBox").style.opacity=".58";el("answerInput").value=reviewMode?"":state.drafts?.[keyOf(p.m,p.c)]||"";el("answerInput").placeholder=ch.placeholder||"";el("feedback").className="feedback";el("feedback").innerHTML='<div class="feedbackIcon">⌁</div><div><strong>Ready.</strong><p>Use the move you learned. If you get stuck, your guide can help.</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Waiting for your answer...</div>';el("nextBtn").style.display=state.completed[keyOf(p.m,p.c)]?"block":"none";document.querySelectorAll(".methodChip").forEach(c=>c.classList.toggle("current",c.textContent.toLowerCase()===ch.type.toLowerCase()));renderTeaching();}
 function celebrate(gain,levelBefore){
   const layer=el("celebrationLayer");
   if(!layer)return;
@@ -93,7 +93,7 @@ function celebrate(gain,levelBefore){
   emblem.textContent=leveledUp?"★":"✦";
   const text=document.createElement("div");
   const title=document.createElement("strong");
-  title.textContent=leveledUp?"LEVEL "+currentLevel()+" UNLOCKED!":gain?"QUEST CLEARED!":"SKILL REFRESHED!";
+  title.textContent=leveledUp?"LEVEL "+currentLevel()+" UNLOCKED!":gain?"ENCOUNTER CLEARED!":"SKILL REFRESHED!";
   const detail=document.createElement("span");
   detail.textContent=(gain?"+"+gain+" XP":"Already mastered")+(state.streak>=3?" · "+state.streak+" answer combo!":" · Nice work, adventurer!");
   text.append(title,detail);
@@ -233,7 +233,7 @@ function runtimeConfigFor(p){
 function isCodeChallenge(ch){
   return ch.type!=="Predict" && ch.type!=="Explain";
 }
-async function runAnswer(){if(el("runBtn").disabled||lessonBusy||learningActive())return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);if(!answer.trim()){el("feedback").textContent="Write an answer first. Your hero keeps their HP.";return;}if(!reviewMode&&battleFor(p.m).hp<=0){el("battleMessage").textContent="Your hero needs a rest. Click Revive hero to continue.";el("reviveBtn").focus();return;}state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
+async function runAnswer(){if(gameScreen!=="adventure"||el("runBtn").disabled||lessonBusy||learningActive())return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);if(!answer.trim()){el("feedback").textContent="Write an answer first. Your hero keeps their HP.";return;}if(!reviewMode&&battleFor(p.m).hp<=0){el("battleMessage").textContent="Your hero needs a rest. Click Revive hero to continue.";el("reviveBtn").focus();return;}state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
 if(ok&&isCodeChallenge(ch)){
   el("runBtn").disabled=true;
   el("runBtn").textContent="Running Python...";
@@ -262,7 +262,7 @@ if(ok){el("mistakeCoach").hidden=true;el("coachAdvice").hidden=true;el("runBtn")
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+(printed?escapeHtml(printed):'Program completed successfully.<br><span class="muted">No printed output.</span>')+'</div>';
 }else{
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';
-}el("nextBtn").style.display="block";updateStats();renderMissionList();renderAdventure();celebrate(awarded,levelBefore);announceReward(p.m);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;battleOutcome(false,false,p);save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");teachingFeedback(p,runtimeResult);el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
+}el("nextBtn").style.display="block";updateStats();renderMissionList();renderAdventure();renderVillageShell();celebrate(awarded,levelBefore);announceReward(p.m);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;battleOutcome(false,false,p);save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");teachingFeedback(p,runtimeResult);el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
 const levelRewards=[
   {name:"Crystal Staff",kind:"Equipment upgrade",description:"Normal attacks gain +2 damage.",attack:2},
   {name:"Arcane Bolt",kind:"Skill unlocked",description:"Charge with 6 new challenges, then deal 25 bonus damage.",skill:{id:"arcane",name:"Arcane Bolt",damage:25}},
@@ -348,7 +348,7 @@ function battleOutcome(ok,first,p){
 }
 function useSkill(){
   const p=position(),battle=battleFor(p.m),skill=heroGear().skills.find(s=>s.id===state.activeSkill);
-  if(!skill||state.skillCharge<6||battle.hp<=0||bossHealth(p.m)<=0||reviewMode||el("runBtn").disabled||lessonBusy||learningActive())return;
+  if(gameScreen!=="adventure"||!skill||state.skillCharge<6||battle.hp<=0||bossHealth(p.m)<=0||reviewMode||el("runBtn").disabled||lessonBusy||learningActive())return;
   encounterBattle(p).damage+=skill.damage;battle.damageDealt+=skill.damage;state.skillCharge=0;
   save();renderBattle();animateBattle("skillAttacks","−"+skill.damage);
   el("battleMessage").textContent=skill.name+" hits for "+skill.damage+" bonus damage!"+(bossHealth(p.m)===0?" Solve this encounter to open the route.":" Recharge with 6 new challenges.");
@@ -367,8 +367,19 @@ function announceReward(m){
   modal(reward.kind+": "+reward.name,reward.description+" All 12 challenges are complete. Your equipment is in the Backpack. Click Next challenge to enter the next region.");
 }
 function modal(title,text){el("modalTitle").textContent=title;el("modalText").textContent=text;el("modalWrap").style.display="flex";}
-function nextChallenge(){if(el("runBtn").disabled||lessonBusy)return;if(!reviewMode&&!state.completed[keyOf(currentMission,currentChallenge)])return;if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;modal("Review complete","You successfully retrieved older material. That repeated recall is what helps it stay available later.");}render();return;}const m=missions[currentMission];if(currentChallenge<m.challenges.length-1){currentChallenge++;}else if(currentMission<missions.length-1&&missionCleared(currentMission)){currentMission++;currentChallenge=0;}else{modal("Kingdom rescued!","Your battle engine defeated the Code Dragon. You combined every region into a working program. Keep your skills strong in Review Arena, or change your battle engine to invent a new game.");}state.lastMission=currentMission;state.lastChallenge=currentChallenge;state.mapPosition=null;save();render();if(learningActive())el("lessonTitle").scrollIntoView({block:"start"});}
-function startReview(){if(el("runBtn").disabled||lessonBusy)return;const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);reviewMode=true;render();}
+function nextChallenge(){
+  if(gameScreen!=="adventure"||el("runBtn").disabled||lessonBusy)return;
+  if(!state.completed[keyOf(position().m,position().c)])return;
+  saveBattleDraft();
+  if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;showVillage();modal("Request complete!","You helped your neighbors remember their Python moves. Come back for another adventure whenever you are ready.");}else render();return;}
+  const finished={m:currentMission,c:currentChallenge},m=missions[currentMission];
+  if(currentChallenge<m.challenges.length-1)currentChallenge++;
+  else if(currentMission<missions.length-1&&missionCleared(currentMission)){currentMission++;currentChallenge=0;}
+  state.lastMission=currentMission;state.lastChallenge=currentChallenge;state.mapPosition=null;save();
+  if(finished.c%3===2&&questCleared(finished.m,Math.floor(finished.c/3))){enterCampfire(finished.m,finished.c);return;}
+  render();if(learningActive())el("lessonTitle").scrollIntoView({block:"start"});
+}
+function startReview(){if(el("runBtn").disabled||lessonBusy)return;const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);gameScreen="adventure";reviewMode=true;render();}
 
 el("reviveBtn").onclick=reviveHero;
 el("useSkillBtn").onclick=useSkill;
@@ -390,5 +401,6 @@ if(typeof ResizeObserver!=="undefined"){
 }
 initAdventure();
 initTeaching();
+initVillage();
 render();
 setTimeout(()=>createPythonWorker(),0);

@@ -10,6 +10,7 @@ on:
         options:
           - version-1
           - version-2
+          - version-3
           - main
 permissions:
   contents: read
