@@ -64,7 +64,108 @@ function render(){renderMissionList();updateStats();const p=position(),m=mission
 function scheduleReview(m,c,hard){state.reviews=state.reviews.filter(r=>!(r.m===m&&r.c===c));const delay=hard?15*60*1000:24*60*60*1000;state.reviews.push({m:m,c:c,due:Date.now()+delay});}
 function showHint(){const ch=current();hintLevel++;el("clueBox").style.opacity="1";el("clueText").textContent=ch.clue+(hintLevel>1?"\n\nWrite the smallest correct answer first. Do not make it fancy.":"");}
 function escapeHtml(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");}
-function runAnswer(){const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;try{ok=!!ch.test(answer);}catch(e){ok=false;}if(ok){const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.25:ch.reward)*(hintLevel?.8:1));if(first||reviewMode)state.xp+=gain;state.completed[k]=true;state.streak=(state.streak||0)+1;scheduleReview(p.m,p.c,hintLevel||state.attempts[k]>1);save();el("feedback").className="feedback good";el("feedback").innerHTML='<div class="feedbackIcon">✓</div><div><strong>Correct. +'+gain+' XP</strong><p>'+ch.success+'</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';el("nextBtn").style.display="block";updateStats();renderMissionList();}else{state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Not quite yet.</strong><p>Check names, punctuation, indentation, and the exact job the prompt asked for. Try again before using the hint.</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">Check the code and try again.</div>';}}
+
+let pythonWorker=null;
+let workerReady=false;
+let workerSequence=0;
+const pendingRuns=new Map();
+
+function setRuntimeStatus(text,ok=false){
+  const node=el("runtimeStatus");
+  if(!node)return;
+  node.textContent=(ok?"● ":"◌ ")+text;
+  node.style.color=ok?"var(--green)":"var(--yellow)";
+}
+function createPythonWorker(){
+  if(pythonWorker) pythonWorker.terminate();
+  workerReady=false;
+  setRuntimeStatus("LOADING PYTHON");
+  pythonWorker=new Worker("python-worker.js");
+  pythonWorker.onmessage=(event)=>{
+    const msg=event.data||{};
+    if(msg.type==="ready"){
+      workerReady=true;
+      setRuntimeStatus("PYTHON READY",true);
+      return;
+    }
+    if(msg.id && pendingRuns.has(msg.id)){
+      const pending=pendingRuns.get(msg.id);
+      pendingRuns.delete(msg.id);
+      clearTimeout(pending.timer);
+      if(msg.type==="result") pending.resolve(msg.result);
+      else pending.reject(new Error(msg.error||"Python runtime error"));
+    }
+  };
+  pythonWorker.onerror=(error)=>{
+    setRuntimeStatus("RUNTIME ERROR");
+    for(const pending of pendingRuns.values()){
+      clearTimeout(pending.timer);
+      pending.reject(error);
+    }
+    pendingRuns.clear();
+  };
+}
+function waitForWorkerReady(){
+  if(workerReady)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const started=Date.now();
+    const check=()=>{
+      if(workerReady)return resolve();
+      if(Date.now()-started>30000)return reject(new Error("Python took too long to load."));
+      setTimeout(check,100);
+    };
+    check();
+  });
+}
+async function executePython(code,setup=""){
+  await waitForWorkerReady();
+  const id="run-"+(++workerSequence);
+  return new Promise((resolve,reject)=>{
+    const timer=setTimeout(()=>{
+      pendingRuns.delete(id);
+      createPythonWorker();
+      reject(new Error("Your code ran too long and was stopped. Check for an infinite loop."));
+    },4000);
+    pendingRuns.set(id,{resolve,reject,timer});
+    pythonWorker.postMessage({id,type:"run",code,setup});
+  });
+}
+function runtimeSetupFor(p){
+  const setups={
+    "1:0":"speed = 31",
+    "1:2":"lives = 1",
+    "3:0":"parts = ['A100', 'B200', 'C300']",
+    "6:0":"value = 'not-a-number'"
+  };
+  return setups[keyOf(p.m,p.c)]||"";
+}
+function isCodeChallenge(ch){
+  return ch.type!=="Predict" && ch.type!=="Explain";
+}
+createPythonWorker();
+
+async function runAnswer(){const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
+if(ok&&isCodeChallenge(ch)){
+  el("runBtn").disabled=true;
+  el("runBtn").textContent="Running Python...";
+  el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Executing real Python...</div>';
+  try{
+    runtimeResult=await executePython(answer,runtimeSetupFor(p));
+    if(!runtimeResult.ok)ok=false;
+  }catch(error){
+    ok=false;
+    runtimeResult={ok:false,stdout:"",stderr:error.message||String(error)};
+  }finally{
+    el("runBtn").disabled=false;
+    el("runBtn").textContent="Run answer";
+  }
+}
+if(ok){const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.25:ch.reward)*(hintLevel?.8:1));if(first||reviewMode)state.xp+=gain;state.completed[k]=true;state.streak=(state.streak||0)+1;scheduleReview(p.m,p.c,hintLevel||state.attempts[k]>1);save();el("feedback").className="feedback good";el("feedback").innerHTML='<div class="feedbackIcon">✓</div><div><strong>Correct. +'+gain+' XP</strong><p>'+ch.success+'</p></div>';if(runtimeResult){
+  const printed=(runtimeResult.stdout||"").trim();
+  el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+(printed?escapeHtml(printed):'Program completed successfully.<br><span class="muted">No printed output.</span>')+'</div>';
+}else{
+  el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';
+}el("nextBtn").style.display="block";updateStats();renderMissionList();}else{state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Not quite yet.</strong><p>Check names, punctuation, indentation, and the exact job the prompt asked for. Try again before using the hint.</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:"Check the code and try again.";el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
 function modal(title,text){el("modalTitle").textContent=title;el("modalText").textContent=text;el("modalWrap").style.display="flex";}
 function nextChallenge(){if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;modal("Review complete","You successfully retrieved older material. That repeated recall is what helps it stay available later.");}render();return;}const m=missions[currentMission];if(currentChallenge<m.challenges.length-1){currentChallenge++;}else if(currentMission<missions.length-1){currentMission++;currentChallenge=0;modal("Mission cleared","The next mission introduces something new while older skills continue returning in review.");}else{modal("Core course complete","You finished the foundation path. Keep using Review Arena until the syntax feels automatic, then build small programs without examples.");}state.lastMission=currentMission;state.lastChallenge=currentChallenge;save();render();}
 function startReview(){const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);reviewMode=true;render();}
