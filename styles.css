@@ -3,7 +3,7 @@
   --cyan:#61dafb;--yellow:#ffd43b;--green:#63dfa0;--red:#ff7575;--purple:#b89cff;--ink:#06101a
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:auto;scroll-padding-bottom:230px}
 body{margin:0;min-height:100vh;background:radial-gradient(circle at 90% 0,#173050 0,#091521 34%,#060b12 72%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 button,textarea{font:inherit}.appShell{display:grid;grid-template-columns:300px minmax(0,1fr);min-height:100vh}
 .sidebar{position:sticky;top:0;height:100vh;overflow:auto;padding:24px;border-right:1px solid var(--line);background:rgba(7,14,23,.94);backdrop-filter:blur(12px)}
@@ -38,3 +38,39 @@ button,textarea{font:inherit}.appShell{display:grid;grid-template-columns:300px 
 @keyframes sparkFlight{0%{opacity:1;transform:translate(0,0) rotate(0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--spin)) scale(.2)}}
 @media(max-width:590px){.questToast{top:14px;padding:13px 16px;gap:10px}.questToast strong{font-size:15px}.questEmblem{font-size:30px}.questToast div>span{font-size:12px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.questToast,.questEmblem,.xpSpark{animation:none}.xpSpark{display:none}.button,.progressTrack>div{transition:none}}
+
+/* Persistent boss arena, below the coding workspace. */
+.main{padding-bottom:210px}
+.battleDock{position:fixed;left:300px;right:0;bottom:0;z-index:15;min-height:164px;display:grid;grid-template-columns:minmax(170px,1fr) minmax(230px,1.3fr) minmax(160px,1fr);align-items:center;gap:16px;padding:14px 24px;border-top:1px solid #49607c;background:linear-gradient(100deg,#0b1a2cee,#17233bee);box-shadow:0 -12px 40px #0005;backdrop-filter:blur(12px)}
+.battleLabel{font-size:10px;font-weight:900;letter-spacing:.14em;color:#b9a0ff;margin-bottom:6px}
+.battleInfo>strong{font-size:14px}.battleInfo p{font-size:11px;color:#aec3d7;line-height:1.5;margin:7px 0 0}.battleInfo .button{margin-top:8px;padding:7px 12px;font-size:12px}
+[hidden]{display:none!important}
+.battleArena{position:relative;height:130px;overflow:hidden;border-bottom:2px solid #406579;background:radial-gradient(ellipse at 65% 55%,#55376666,transparent 65%);isolation:isolate}
+.battleGround{position:absolute;bottom:0;left:0;right:0;height:13px;background:linear-gradient(#2c405a,#1d293b);border-radius:50% 50% 0 0}.battleMoon{position:absolute;top:2px;left:46%;height:22px;width:22px;border-radius:50%;background:#adbbeb44;box-shadow:0 0 25px #acb9ee33}
+.heroSprite{position:absolute;left:5%;bottom:5px;width:68px;height:90px;transform-origin:bottom center;animation:heroIdle 2.6s ease-in-out infinite}
+.dragonSprite{position:absolute;right:0;bottom:5px;width:190px;height:110px;transform-origin:bottom center;animation:dragonIdle 3.2s ease-in-out infinite}
+.heroSprite svg,.dragonSprite svg{width:100%;height:100%;filter:drop-shadow(0 5px 7px #0007)}
+.magicBolt,.fireBolt{position:absolute;bottom:53px;width:24px;height:16px;opacity:0;border-radius:50%;pointer-events:none}
+.magicBolt{left:21%;background:#a0fff2;box-shadow:0 0 16px 7px #61dafb88}
+.fireBolt{right:39%;background:#ffcf70;box-shadow:0 0 16px 8px #ff753a99}
+.battleHit{position:absolute;top:18px;opacity:0;font-size:22px;font-weight:900;text-shadow:0 2px 0 #0b1024}
+.hpLabel{display:flex;justify-content:space-between;gap:8px;font-size:10px;margin-bottom:6px}.hpLabel strong{color:#76ebc4;letter-spacing:.08em}.hpLabel span{color:#c9daed}.bossLabel{margin-top:15px}.bossLabel strong{color:#f4a4c7}.hpTrack{height:10px;border-radius:5px;background:#050f1e;border:1px solid #30445d;overflow:hidden}.hpTrack>div{height:100%;width:100%;background:linear-gradient(90deg,#32b8a4,#9ef5c1);transition:width .6s ease}.bossHp>div{background:linear-gradient(90deg,#a55fbc,#f484a7)}
+.heroAttacks .heroSprite{animation:heroCast .75s ease both}.heroAttacks .magicBolt{animation:magicAttack .7s ease-out both}.heroAttacks .dragonSprite{animation:dragonHit .9s ease both}.heroAttacks .battleHit{right:22%;color:#8effdf;animation:damageNumber 1.2s .4s ease-out both}
+.dragonAttacks .dragonSprite{animation:dragonCast .9s ease both}.dragonAttacks .fireBolt{animation:fireAttack .8s ease-out both}.dragonAttacks .heroSprite{animation:heroHit 1s ease both}.dragonAttacks .battleHit{left:8%;color:#ffad94;animation:damageNumber 1.2s .4s ease-out both}
+.bossDefeated .dragonSprite{opacity:.3;filter:grayscale(1);animation:none;transform:translateY(24px) rotate(8deg)}.bossDefeated .battleLabel{color:#9ef5c1}.heroDown .heroSprite{opacity:.45;animation:none;transform:rotate(-25deg)}
+@keyframes heroIdle{50%{transform:translateY(-3px)}}
+@keyframes dragonIdle{50%{transform:translateY(-4px) rotate(-1deg)}}
+@keyframes heroCast{30%{transform:translateX(14px) rotate(8deg)}70%{transform:translateX(0) rotate(-3deg)}}
+@keyframes dragonCast{30%{transform:translateX(-12px) rotate(-4deg)}}
+@keyframes magicAttack{0%,15%{opacity:0;transform:translateX(0) scale(.5)}30%{opacity:1}75%{opacity:1;transform:translateX(140px) scale(1.2)}100%{opacity:0;transform:translateX(170px) scale(.2)}}
+@keyframes fireAttack{0%,15%{opacity:0;transform:translateX(0) scale(.5)}30%{opacity:1}75%{opacity:1;transform:translateX(-130px) scale(1.2)}100%{opacity:0;transform:translateX(-160px) scale(.2)}}
+@keyframes dragonHit{0%,45%,100%{transform:translateX(0);filter:none}55%,75%{transform:translateX(9px);filter:brightness(1.8)}65%{transform:translateX(3px)}}
+@keyframes heroHit{0%,45%,100%{transform:translateX(0);filter:none}55%,75%{transform:translateX(-7px);filter:sepia(1) saturate(3)}65%{transform:translateX(-2px)}}
+@keyframes damageNumber{0%{opacity:0;transform:translateY(0) scale(.6)}20%{opacity:1;transform:translateY(-5px) scale(1.2)}75%{opacity:1}100%{opacity:0;transform:translateY(-25px) scale(1)}}
+@media(max-width:1150px) and (min-width:931px){.battleDock{grid-template-columns:1fr 230px;gap:12px}.battleVitals{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:5px 16px}.hpLabel{grid-row:1;margin:0}.hpTrack{grid-row:2}.bossLabel{grid-column:2}.bossHp{grid-column:2}.main{padding-bottom:245px}}
+@media(max-width:930px){.battleDock{left:0;grid-template-columns:minmax(140px,1fr) minmax(210px,1fr) minmax(135px,1fr);padding:10px 16px;gap:12px}.main{padding-bottom:200px}}
+@media(max-width:590px){.battleDock{grid-template-columns:minmax(100px,1fr) minmax(160px,1.5fr);padding:10px 12px;gap:8px;min-height:180px}.battleArena{height:110px}.heroSprite{width:53px;height:76px;left:0}.dragonSprite{width:140px;height:90px;right:-6px}.battleInfo>strong{font-size:11px}.battleInfo p{font-size:10px}.battleLabel{font-size:9px}.battleVitals{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}.hpLabel{grid-row:1;margin:0}.hpTrack{grid-row:2}.bossLabel{grid-column:2}.bossHp{grid-column:2}.main{padding-bottom:225px}}
+@media(prefers-reduced-motion:reduce){.heroSprite,.dragonSprite,.heroAttacks .heroSprite,.heroAttacks .dragonSprite,.dragonAttacks .heroSprite,.dragonAttacks .dragonSprite,.battleHit{animation:none!important}.magicBolt,.fireBolt{display:none}.hpTrack>div{transition:none}}
+
+@media(max-width:1150px){.dragonSprite{width:145px;height:104px}.heroSprite{width:58px;height:86px;left:1%}}
+@media(max-width:590px){.dragonSprite{width:110px;height:84px;right:0}.heroSprite{width:42px;height:69px;left:0}}

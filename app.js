@@ -41,12 +41,29 @@ const missions = [
   ]}
 ];
 
-const defaultState={xp:0,completed:{},attempts:{},streak:0,lastMission:0,lastChallenge:0,reviews:[]};
+missions.forEach((mission,index)=>{
+  const additions=extraChallenges[index].map(spec=>({
+    ...spec,reward:spec.type==="Predict"?100:150,
+    placeholder:spec.type==="Predict"?"Type the output, with each line on a new line":"# Write your Python solution",
+    why:spec.type==="Predict"?"Trace the code before running it. Every correct prediction lands a hit.":"Build working code from memory to break the dragon's defenses.",
+    success:spec.type==="Predict"?"Correct. You traced the code successfully.":"Correct. Your Python passed the challenge checks.",
+    output:spec.expected||"Python checks passed",
+    runtime:{setup:spec.setup||"",verify:spec.verify||"",expectedStdout:spec.expectedStdout},
+    test:spec.type==="Predict"?(answer=>answer.trim().replace(/\r\n/g,"\n")===spec.expected):(answer=>Boolean(answer.trim()))
+  }));
+  mission.challenges.push(...additions);
+});
+
+const defaultState={xp:0,completed:{},attempts:{},streak:0,lastMission:0,lastChallenge:0,reviews:[],battles:{}};
 let state=loadState();
 let currentMission=Math.min(state.lastMission||0,missions.length-1);
+const firstUnfinished=missions.findIndex((m,i)=>!m.challenges.every((_,c)=>state.completed[keyOfInitial(i,c)]));
+function keyOfInitial(m,c){return m+":"+c;}
+if(firstUnfinished>=0 && currentMission>firstUnfinished){currentMission=firstUnfinished;state.lastMission=currentMission;state.lastChallenge=missions[currentMission].challenges.findIndex((_,c)=>!state.completed[keyOfInitial(currentMission,c)]);}
 let currentChallenge=Math.min(state.lastChallenge||0,missions[currentMission].challenges.length-1);
 let reviewMode=false,reviewQueue=[],hintLevel=0;
 let celebrationTimer=null;
+let battleAnimationTimer=null;
 const el=id=>document.getElementById(id);
 const keyOf=(m,c)=>m+":"+c;
 
@@ -54,14 +71,14 @@ function loadState(){try{return Object.assign({},defaultState,JSON.parse(localSt
 function save(){localStorage.setItem("pythonMemoryQuestState",JSON.stringify(state));}
 function totalChallenges(){return missions.reduce((n,m)=>n+m.challenges.length,0);}
 function completedCount(){return Object.keys(state.completed).filter(k=>state.completed[k]).length;}
-function currentLevel(){return Math.floor(state.xp/500)+1;}
-function rank(){const l=currentLevel();if(l>=7)return "Python Builder";if(l>=5)return "Python Explorer";if(l>=3)return "Python Apprentice";return "Python Rookie";}
-function updateStats(){el("xpStat").textContent=state.xp;el("levelStat").textContent=currentLevel();el("rankLabel").textContent=rank();el("streakStat").textContent=state.streak||0;const pct=Math.round(completedCount()/totalChallenges()*100);el("progressText").textContent=pct+"%";el("progressFill").style.width=pct+"%";el("dueCount").textContent=state.reviews.filter(r=>r.due<=Date.now()).length;}
+function currentLevel(){const next=missions.findIndex((m,i)=>!m.challenges.every((_,c)=>state.completed[keyOf(i,c)]));return next<0?missions.length:next+1;}
+function rank(){const l=Math.floor(state.xp/500)+1;if(l>=7)return "Python Builder";if(l>=5)return "Python Explorer";if(l>=3)return "Python Apprentice";return "Python Rookie";}
+function updateStats(){el("xpStat").textContent=state.xp;el("levelStat").textContent=currentLevel();el("rankLabel").textContent=rank();el("streakStat").textContent=state.streak||0;const pct=Math.round(completedCount()/totalChallenges()*100);el("progressText").textContent=pct+"%";el("progressFill").style.width=pct+"%";el("dueCount").textContent=state.reviews.filter(r=>r.due<=Date.now()).length;renderBattle();}
 function isMissionUnlocked(i){if(i===0)return true;return missions[i-1].challenges.every((_,c)=>state.completed[keyOf(i-1,c)]);}
-function renderMissionList(){el("missionList").innerHTML="";missions.forEach((m,i)=>{const b=document.createElement("button");const done=m.challenges.every((_,c)=>state.completed[keyOf(i,c)]);b.className="missionBtn"+(i===currentMission&&!reviewMode?" active":"")+(isMissionUnlocked(i)?"":" locked")+(done?" done":"");b.innerHTML='<span class="missionNum">'+(done?"✓":String(i+1).padStart(2,"0"))+'</span><span>'+m.title+'</span>';b.onclick=()=>{if(!isMissionUnlocked(i))return;reviewMode=false;currentMission=i;currentChallenge=0;state.lastMission=i;state.lastChallenge=0;save();render();};el("missionList").appendChild(b);});}
+function renderMissionList(){el("missionList").innerHTML="";missions.forEach((m,i)=>{const b=document.createElement("button");const done=m.challenges.every((_,c)=>state.completed[keyOf(i,c)]);b.className="missionBtn"+(i===currentMission&&!reviewMode?" active":"")+(isMissionUnlocked(i)?"":" locked")+(done?" done":"");b.innerHTML='<span class="missionNum">'+(done?"✓":String(i+1).padStart(2,"0"))+'</span><span>'+m.title+'</span>';b.onclick=()=>{if(el("runBtn").disabled||!isMissionUnlocked(i))return;reviewMode=false;currentMission=i;currentChallenge=0;state.lastMission=i;state.lastChallenge=0;save();render();};el("missionList").appendChild(b);});}
 function position(){return reviewMode&&reviewQueue.length?reviewQueue[0]:{m:currentMission,c:currentChallenge};}
 function current(){const p=position();return missions[p.m].challenges[p.c];}
-function render(){el("runBtn").textContent="Run answer";renderMissionList();updateStats();const p=position(),m=missions[p.m],ch=current();hintLevel=0;el("missionMode").textContent=reviewMode?"SPACED REVIEW":"RETRIEVAL PRACTICE";el("missionTitle").textContent=reviewMode?"Review Arena: "+m.title:m.title;el("missionSubtitle").textContent=reviewMode?"An older skill is back. Try it before looking at the clue.":m.subtitle;el("challengeType").textContent=ch.type.toUpperCase();el("prompt").textContent=ch.prompt;el("whyText").textContent=ch.why;el("reward").textContent=reviewMode?Math.round(ch.reward*1.25):ch.reward;el("clueText").textContent="Hidden until you ask for it.";el("clueBox").style.opacity=".58";el("answerInput").value="";el("answerInput").placeholder=ch.placeholder||"";el("feedback").className="feedback";el("feedback").innerHTML='<div class="feedbackIcon">⌁</div><div><strong>Ready.</strong><p>Try from memory first. Getting stuck briefly is part of the training.</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Waiting for your answer...</div>';el("nextBtn").style.display="none";document.querySelectorAll(".methodChip").forEach(c=>c.classList.toggle("current",c.textContent.toLowerCase()===ch.type.toLowerCase()));}
+function render(){el("runBtn").textContent="Run answer";renderMissionList();updateStats();const p=position(),m=missions[p.m],ch=current();hintLevel=0;el("missionMode").textContent=reviewMode?"SPACED REVIEW":"RETRIEVAL PRACTICE";el("missionTitle").textContent=reviewMode?"Review Arena: "+m.title:m.title;el("missionSubtitle").textContent=reviewMode?"An older skill is back. Try it before looking at the clue.":m.subtitle;el("challengeType").textContent=ch.type.toUpperCase()+" · CHALLENGE "+(p.c+1)+" / "+m.challenges.length;el("prompt").textContent=ch.prompt;el("whyText").textContent=ch.why;el("reward").textContent=reviewMode?Math.round(ch.reward*1.25):ch.reward;el("clueText").textContent="Hidden until you ask for it.";el("clueBox").style.opacity=".58";el("answerInput").value="";el("answerInput").placeholder=ch.placeholder||"";el("feedback").className="feedback";el("feedback").innerHTML='<div class="feedbackIcon">⌁</div><div><strong>Ready.</strong><p>Try from memory first. Getting stuck briefly is part of the training.</p></div>';el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Waiting for your answer...</div>';el("nextBtn").style.display="none";document.querySelectorAll(".methodChip").forEach(c=>c.classList.toggle("current",c.textContent.toLowerCase()===ch.type.toLowerCase()));}
 function celebrate(gain,levelBefore){
   const layer=el("celebrationLayer");
   if(!layer)return;
@@ -211,12 +228,12 @@ function runtimeConfigFor(p){
     "7:0":{verify:'Part("A100").number == "A100"',display:'print("Part object created successfully")'},
     "8:0":{verify:'missing_qty(10, 4) == 6 and missing_qty(10, 12) == 0',display:'print("missing_qty(10, 4) =", missing_qty(10, 4)); print("missing_qty(10, 12) =", missing_qty(10, 12))'}
   };
-  return configs[keyOf(p.m,p.c)]||{};
+  return missions[p.m].challenges[p.c].runtime||configs[keyOf(p.m,p.c)]||{};
 }
 function isCodeChallenge(ch){
   return ch.type!=="Predict" && ch.type!=="Explain";
 }
-async function runAnswer(){if(el("runBtn").disabled)return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
+async function runAnswer(){if(el("runBtn").disabled)return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);if(!answer.trim()){el("feedback").textContent="Write an answer first. Your hero keeps their HP.";return;}if(!reviewMode&&battleFor(p.m).hp<=0){el("battleMessage").textContent="Your hero needs a rest. Click Revive hero to continue.";el("reviveBtn").focus();return;}state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
 if(ok&&isCodeChallenge(ch)){
   el("runBtn").disabled=true;
   el("runBtn").textContent="Running Python...";
@@ -229,6 +246,7 @@ if(ok&&isCodeChallenge(ch)){
       runtimeConfig.verify||"",
       runtimeConfig.display||""
     );
+    if(runtimeConfig.expectedStdout!==undefined && (runtimeResult.stdout||"").trim()!==runtimeConfig.expectedStdout)runtimeResult.verified=false;
     if(!runtimeResult.ok || runtimeResult.verified===false)ok=false;
   }catch(error){
     ok=false;
@@ -238,16 +256,64 @@ if(ok&&isCodeChallenge(ch)){
     el("runBtn").textContent="Run answer";
   }
 }
-if(ok){el("runBtn").textContent="Run answer";const levelBefore=currentLevel();const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.25:ch.reward)*(hintLevel?.8:1));const awarded=first||reviewMode?gain:0;state.xp+=awarded;state.completed[k]=true;state.streak=(state.streak||0)+1;scheduleReview(p.m,p.c,hintLevel||state.attempts[k]>1);save();el("feedback").className="feedback good";el("feedback").innerHTML='<div class="feedbackIcon">✓</div><div><strong>Correct. '+(awarded?"+"+awarded+" XP":"Already mastered.")+'</strong><p>'+ch.success+'</p></div>';if(runtimeResult){
+if(ok){el("runBtn").textContent="Run answer";const levelBefore=currentLevel();const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.25:ch.reward)*(hintLevel?.8:1));const awarded=first||reviewMode?gain:0;state.xp+=awarded;state.completed[k]=true;battleOutcome(true,first,p);state.streak=(state.streak||0)+1;scheduleReview(p.m,p.c,hintLevel||state.attempts[k]>1);save();el("feedback").className="feedback good";el("feedback").innerHTML='<div class="feedbackIcon">✓</div><div><strong>Correct. '+(awarded?"+"+awarded+" XP":"Already mastered.")+'</strong><p>'+ch.success+'</p></div>';if(runtimeResult){
   const printed=(runtimeResult.stdout||"").trim();
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+(printed?escapeHtml(printed):'Program completed successfully.<br><span class="muted">No printed output.</span>')+'</div>';
 }else{
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';
-}el("nextBtn").style.display="block";updateStats();renderMissionList();celebrate(awarded,levelBefore);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
+}el("nextBtn").style.display="block";updateStats();renderMissionList();celebrate(awarded,levelBefore);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;battleOutcome(false,false,p);save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
+function battleFor(m){
+  if(!state.battles||typeof state.battles!=="object")state.battles={};
+  if(!state.battles[m]||!Number.isFinite(state.battles[m].hp))state.battles[m]={hp:100};
+  return state.battles[m];
+}
+function renderBattle(){
+  if(!el("battleDock"))return;
+  const p=position(),mission=missions[p.m],battle=battleFor(p.m);
+  const hits=mission.challenges.filter((_,c)=>state.completed[keyOf(p.m,c)]).length;
+  const hp=Math.max(0,Math.min(100,battle.hp));
+  const bossHp=(mission.challenges.length-hits)*10;
+  el("battleLabel").textContent=reviewMode?"REVIEW TRAINING":"LEVEL "+(p.m+1)+" · "+mission.title.toUpperCase();
+  el("heroHpText").textContent=hp+" / 100 HP";
+  el("bossHpText").textContent=bossHp+" / "+mission.challenges.length*10+" HP";
+  el("heroHpFill").style.width=hp+"%";
+  el("bossHpFill").style.width=(100*(mission.challenges.length-hits)/mission.challenges.length)+"%";
+  el("heroHpBar").setAttribute("aria-valuenow",String(hp));
+  el("bossHpBar").setAttribute("aria-valuenow",String(bossHp));
+  el("bossHpBar").setAttribute("aria-valuemax",String(mission.challenges.length*10));
+  el("battleProgress").textContent=hits+" / "+mission.challenges.length+" challenges cleared";
+  el("reviveBtn").hidden=hp>0||reviewMode;
+  el("battleDock").classList.toggle("bossDefeated",bossHp===0);
+  el("battleDock").classList.toggle("heroDown",hp===0&&!reviewMode);
+  if(hp===0&&!reviewMode)el("battleMessage").textContent="Hero down! Revive to 100 HP. Your progress is safe.";
+  else if(bossHp===0)el("battleMessage").textContent="Dragon defeated! This level is mastered.";
+  else if(reviewMode)el("battleMessage").textContent="Practice arena · Review answers do not cost HP.";
+  else el("battleMessage").textContent="Correct: dragon −10 HP · Wrong: hero −8 HP";
+}
+function battleOutcome(ok,first,p){
+  if(reviewMode)return;
+  const battle=battleFor(p.m);
+  if(!ok)battle.hp=Math.max(0,battle.hp-8);
+  const dock=el("battleDock");
+  clearTimeout(battleAnimationTimer);
+  dock.classList.remove("heroAttacks","dragonAttacks");
+  void dock.offsetWidth;
+  dock.classList.add(ok?"heroAttacks":"dragonAttacks");
+  el("battleHit").textContent=ok?(first?"−10":"PRACTICE"):"−8";
+  battleAnimationTimer=setTimeout(()=>dock.classList.remove("heroAttacks","dragonAttacks"),1400);
+}
+function reviveHero(){
+  if(el("runBtn").disabled)return;
+  battleFor(position().m).hp=100;
+  save();renderBattle();
+  el("battleMessage").textContent="Back in the fight! Edit your answer and try again.";
+  el("answerInput").focus();
+}
 function modal(title,text){el("modalTitle").textContent=title;el("modalText").textContent=text;el("modalWrap").style.display="flex";}
-function nextChallenge(){if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;modal("Review complete","You successfully retrieved older material. That repeated recall is what helps it stay available later.");}render();return;}const m=missions[currentMission];if(currentChallenge<m.challenges.length-1){currentChallenge++;}else if(currentMission<missions.length-1){currentMission++;currentChallenge=0;modal("Mission cleared","The next mission introduces something new while older skills continue returning in review.");}else{modal("Core course complete","You finished the foundation path. Keep using Review Arena until the syntax feels automatic, then build small programs without examples.");}state.lastMission=currentMission;state.lastChallenge=currentChallenge;save();render();}
-function startReview(){const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);reviewMode=true;render();}
+function nextChallenge(){if(el("runBtn").disabled)return;if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;modal("Review complete","You successfully retrieved older material. That repeated recall is what helps it stay available later.");}render();return;}const m=missions[currentMission];if(currentChallenge<m.challenges.length-1){currentChallenge++;}else if(currentMission<missions.length-1){currentMission++;currentChallenge=0;modal("Dragon defeated!","All 12 challenges are cleared. A new dragon waits in the next level. Your hero starts with full HP.");}else{modal("Core course complete","You finished the foundation path. Keep using Review Arena until the syntax feels automatic, then build small programs without examples.");}state.lastMission=currentMission;state.lastChallenge=currentChallenge;save();render();}
+function startReview(){if(el("runBtn").disabled)return;const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);reviewMode=true;render();}
 
+el("reviveBtn").onclick=reviveHero;
 el("hintBtn").onclick=showHint;
 el("runBtn").onclick=runAnswer;
 el("nextBtn").onclick=nextChallenge;
