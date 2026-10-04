@@ -6,7 +6,7 @@
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <div class="appShell">
@@ -137,6 +137,8 @@
     <div class="battleInfo">
       <div id="battleLabel" class="battleLabel">LEVEL 1 · VARIABLES</div>
       <strong id="battleProgress">0 / 12 challenges cleared</strong>
+      <div id="nextReward" class="nextReward">Level reward: Crystal Staff</div>
+      <div id="gearSummary" class="gearSummary">Starter wand and robe</div>
       <p id="battleMessage" aria-live="polite">Correct: dragon −10 HP · Wrong: hero −8 HP</p>
       <button id="reviveBtn" class="button primary" hidden>Revive hero</button>
     </div>
@@ -156,12 +158,19 @@
       <div id="heroHpBar" class="hpTrack" role="progressbar" aria-label="Hero health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="heroHpFill"></div></div>
       <div class="hpLabel bossLabel"><strong>THE DRAGON</strong><span id="bossHpText">120 / 120 HP</span></div>
       <div id="bossHpBar" class="hpTrack bossHp" role="progressbar" aria-label="Dragon health" aria-valuemin="0" aria-valuemax="120" aria-valuenow="120"><div id="bossHpFill"></div></div>
+      <div id="skillControls" class="skillControls">
+        <label for="skillSelect" class="srOnly">Combat skill</label>
+        <select id="skillSelect" aria-label="Combat skill"><option>First skill unlocks after level 2</option></select>
+        <div class="skillChargeTrack"><div id="skillChargeFill"></div></div>
+        <span id="skillChargeText">Complete level 2 to learn Arcane Bolt</span>
+        <button id="useSkillBtn" class="button skillButton" disabled>Skill locked</button>
+      </div>
     </div>
   </section>
   <script src="challenges.js?v=1"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=11"></script>
 </body>
 </html>
