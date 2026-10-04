@@ -80,7 +80,7 @@ function createPythonWorker(){
   if(pythonWorker) pythonWorker.terminate();
   workerReady=false;
   setRuntimeStatus("LOADING PYTHON");
-  pythonWorker=new Worker("python-worker.js");
+  pythonWorker=new Worker("python-worker.js",{type:"module"});
   pythonWorker.onmessage=(event)=>{
     const msg=event.data||{};
     if(msg.type==="ready"){
@@ -111,13 +111,13 @@ function waitForWorkerReady(){
     const started=Date.now();
     const check=()=>{
       if(workerReady)return resolve();
-      if(Date.now()-started>30000)return reject(new Error("Python took too long to load."));
+      if(Date.now()-started>90000)return reject(new Error("Python took too long to load. Check your connection and refresh the page."));
       setTimeout(check,100);
     };
     check();
   });
 }
-async function executePython(code,setup=""){
+async function executePython(code,setup="",verify="",display=""){
   await waitForWorkerReady();
   const id="run-"+(++workerSequence);
   return new Promise((resolve,reject)=>{
@@ -127,17 +127,25 @@ async function executePython(code,setup=""){
       reject(new Error("Your code ran too long and was stopped. Check for an infinite loop."));
     },4000);
     pendingRuns.set(id,{resolve,reject,timer});
-    pythonWorker.postMessage({id,type:"run",code,setup});
+    pythonWorker.postMessage({id,type:"run",code,setup,verify,display});
   });
 }
-function runtimeSetupFor(p){
-  const setups={
-    "1:0":"speed = 31",
-    "1:2":"lives = 1",
-    "3:0":"parts = ['A100', 'B200', 'C300']",
-    "6:0":"value = 'not-a-number'"
+function runtimeConfigFor(p){
+  const configs={
+    "0:0":{verify:'energy == 100 and isinstance(energy, int)',display:'print("energy =", energy)'},
+    "0:2":{verify:'player == "Alex"',display:'print("player =", player)'},
+    "1:0":{setup:"speed = 31",display:'print("condition executed successfully")'},
+    "1:2":{setup:"lives = 1",display:'print("keep playing")'},
+    "2:0":{verify:'tools == ["hammer", "wrench", "pliers"]',display:'print(tools)'},
+    "3:0":{setup:"parts = ['A100', 'B200', 'C300']"},
+    "4:0":{verify:'double(5) == 10',display:'print("double(5) =", double(5))'},
+    "4:2":{verify:'square(5) == 25',display:'print("square(5) =", square(5))'},
+    "5:0":{verify:'part.get("number") == "A100" and part.get("qty") == 4',display:'print(part)'},
+    "6:0":{setup:"value = 'not-a-number'"},
+    "7:0":{verify:'Part("A100").number == "A100"',display:'print("Part object created successfully")'},
+    "8:0":{verify:'missing_qty(10, 4) == 6 and missing_qty(10, 12) == 0',display:'print("missing_qty(10, 4) =", missing_qty(10, 4)); print("missing_qty(10, 12) =", missing_qty(10, 12))'}
   };
-  return setups[keyOf(p.m,p.c)]||"";
+  return configs[keyOf(p.m,p.c)]||{};
 }
 function isCodeChallenge(ch){
   return ch.type!=="Predict" && ch.type!=="Explain";
@@ -150,8 +158,7 @@ if(ok&&isCodeChallenge(ch)){
   el("runBtn").textContent="Running Python...";
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Executing real Python...</div>';
   try{
-    runtimeResult=await executePython(answer,runtimeSetupFor(p));
-    if(!runtimeResult.ok)ok=false;
+    const runtimeConfig=runtimeConfigFor(p);\n    runtimeResult=await executePython(answer,runtimeConfig.setup||"",runtimeConfig.verify||"",runtimeConfig.display||"");\n    if(!runtimeResult.ok || runtimeResult.verified===false)ok=false;
   }catch(error){
     ok=false;
     runtimeResult={ok:false,stdout:"",stderr:error.message||String(error)};
@@ -165,7 +172,7 @@ if(ok){const first=!state.completed[k],gain=Math.round((reviewMode?ch.reward*1.2
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+(printed?escapeHtml(printed):'Program completed successfully.<br><span class="muted">No printed output.</span>')+'</div>';
 }else{
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';
-}el("nextBtn").style.display="block";updateStats();renderMissionList();}else{state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Not quite yet.</strong><p>Check names, punctuation, indentation, and the exact job the prompt asked for. Try again before using the hint.</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:"Check the code and try again.";el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
+}el("nextBtn").style.display="block";updateStats();renderMissionList();}else{state.streak=0;save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Not quite yet.</strong><p>Check names, punctuation, indentation, and the exact job the prompt asked for. Try again before using the hint.</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Check the code and try again.");el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
 function modal(title,text){el("modalTitle").textContent=title;el("modalText").textContent=text;el("modalWrap").style.display="flex";}
 function nextChallenge(){if(reviewMode){reviewQueue.shift();if(!reviewQueue.length){reviewMode=false;modal("Review complete","You successfully retrieved older material. That repeated recall is what helps it stay available later.");}render();return;}const m=missions[currentMission];if(currentChallenge<m.challenges.length-1){currentChallenge++;}else if(currentMission<missions.length-1){currentMission++;currentChallenge=0;modal("Mission cleared","The next mission introduces something new while older skills continue returning in review.");}else{modal("Core course complete","You finished the foundation path. Keep using Review Arena until the syntax feels automatic, then build small programs without examples.");}state.lastMission=currentMission;state.lastChallenge=currentChallenge;save();render();}
 function startReview(){const due=state.reviews.filter(r=>r.due<=Date.now());if(!due.length){const completed=Object.keys(state.completed).filter(k=>state.completed[k]);if(!completed.length){modal("Nothing to review yet","Complete at least one challenge first. Review Arena will bring learned skills back later.");return;}reviewQueue=completed.slice(-Math.min(5,completed.length)).map(k=>{const p=k.split(":").map(Number);return{m:p[0],c:p[1]};});}else reviewQueue=due.slice(0,6);reviewMode=true;render();}
