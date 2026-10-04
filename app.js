@@ -77,36 +77,53 @@ function setRuntimeStatus(text,ok=false){
   node.style.color=ok?"var(--green)":"var(--yellow)";
 }
 function createPythonWorker(){
-  if(pythonWorker) pythonWorker.terminate();
-  workerReady=false;
-  setRuntimeStatus("LOADING PYTHON");
-  pythonWorker=new Worker("python-worker.js",{type:"module"});
-  pythonWorker.onmessage=(event)=>{
-    const msg=event.data||{};
-    if(msg.type==="ready"){
-      workerReady=true;
-      setRuntimeStatus("PYTHON READY",true);
-      return;
-    }
-    if(msg.id && pendingRuns.has(msg.id)){
-      const pending=pendingRuns.get(msg.id);
-      pendingRuns.delete(msg.id);
-      clearTimeout(pending.timer);
-      if(msg.type==="result") pending.resolve(msg.result);
-      else pending.reject(new Error(msg.error||"Python runtime error"));
-    }
-  };
-  pythonWorker.onerror=(error)=>{
-    setRuntimeStatus("RUNTIME ERROR");
-    for(const pending of pendingRuns.values()){
-      clearTimeout(pending.timer);
-      pending.reject(error);
-    }
-    pendingRuns.clear();
-  };
+  try{
+    if(pythonWorker) pythonWorker.terminate();
+    workerReady=false;
+    setRuntimeStatus("LOADING PYTHON");
+    pythonWorker=new Worker("python-worker.js?v=3",{type:"module"});
+    pythonWorker.onmessage=(event)=>{
+      const msg=event.data||{};
+      if(msg.type==="ready"){
+        workerReady=true;
+        setRuntimeStatus("PYTHON READY",true);
+        return;
+      }
+      if(msg.type==="runtime-error" && !msg.id){
+        workerReady=false;
+        setRuntimeStatus("PYTHON UNAVAILABLE");
+        return;
+      }
+      if(msg.id && pendingRuns.has(msg.id)){
+        const pending=pendingRuns.get(msg.id);
+        pendingRuns.delete(msg.id);
+        clearTimeout(pending.timer);
+        if(msg.type==="result") pending.resolve(msg.result);
+        else pending.reject(new Error(msg.error||"Python runtime error"));
+      }
+    };
+    pythonWorker.onerror=()=>{
+      workerReady=false;
+      setRuntimeStatus("PYTHON UNAVAILABLE");
+      for(const pending of pendingRuns.values()){
+        clearTimeout(pending.timer);
+        pending.reject(new Error("Python runtime could not start in this browser."));
+      }
+      pendingRuns.clear();
+    };
+    return true;
+  }catch(error){
+    pythonWorker=null;
+    workerReady=false;
+    setRuntimeStatus("PYTHON UNAVAILABLE");
+    return false;
+  }
 }
 function waitForWorkerReady(){
   if(workerReady)return Promise.resolve();
+  if(!pythonWorker && !createPythonWorker()){
+    return Promise.reject(new Error("Python runtime could not start in this browser."));
+  }
   return new Promise((resolve,reject)=>{
     const started=Date.now();
     const check=()=>{
@@ -150,8 +167,6 @@ function runtimeConfigFor(p){
 function isCodeChallenge(ch){
   return ch.type!=="Predict" && ch.type!=="Explain";
 }
-createPythonWorker();
-
 async function runAnswer(){const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
 if(ok&&isCodeChallenge(ch)){
   el("runBtn").disabled=true;
@@ -192,3 +207,4 @@ el("modalClose").onclick=()=>el("modalWrap").style.display="none";
 el("resetBtn").onclick=()=>{if(confirm("Reset all Python Memory Quest progress?")){localStorage.removeItem("pythonMemoryQuestState");location.reload();}};
 el("answerInput").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")runAnswer();if(e.key==="Tab"){e.preventDefault();const t=e.target,s=t.selectionStart,en=t.selectionEnd;t.value=t.value.substring(0,s)+"    "+t.value.substring(en);t.selectionStart=t.selectionEnd=s+4;}});
 render();
+setTimeout(()=>createPythonWorker(),0);
