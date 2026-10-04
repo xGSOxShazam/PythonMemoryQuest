@@ -158,7 +158,14 @@ if(ok&&isCodeChallenge(ch)){
   el("runBtn").textContent="Running Python...";
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="muted">Executing real Python...</div>';
   try{
-    const runtimeConfig=runtimeConfigFor(p);\n    runtimeResult=await executePython(answer,runtimeConfig.setup||"",runtimeConfig.verify||"",runtimeConfig.display||"");\n    if(!runtimeResult.ok || runtimeResult.verified===false)ok=false;
+    const runtimeConfig=runtimeConfigFor(p);
+    runtimeResult=await executePython(
+      answer,
+      runtimeConfig.setup||"",
+      runtimeConfig.verify||"",
+      runtimeConfig.display||""
+    );
+    if(!runtimeResult.ok || runtimeResult.verified===false)ok=false;
   }catch(error){
     ok=false;
     runtimeResult={ok:false,stdout:"",stderr:error.message||String(error)};
