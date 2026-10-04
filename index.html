@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
+  <meta name="theme-color" content="#08111b">
+  <title>Python Memory Quest</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="appShell">
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Python Memory Quest home">
+        <span class="logo">Py</span>
+        <span><strong>Python Memory Quest</strong><small>Learn it. Recall it. Use it.</small></span>
+      </a>
+
+      <section class="profileCard">
+        <div class="profileTop">
+          <div class="avatar">P</div>
+          <div><strong id="playerName">Code Adventurer</strong><small id="rankLabel">Python Rookie</small></div>
+        </div>
+        <div class="stats">
+          <div><span>Level</span><strong id="levelStat">1</strong></div>
+          <div><span>XP</span><strong id="xpStat">0</strong></div>
+          <div><span>Streak</span><strong id="streakStat">0</strong></div>
+        </div>
+        <div class="progressRow"><span>Course mastery</span><span id="progressText">0%</span></div>
+        <div class="progressTrack"><div id="progressFill"></div></div>
+      </section>
+
+      <div class="sideLabel">MISSIONS</div>
+      <nav id="missionList" class="missionList" aria-label="Python missions"></nav>
+
+      <div class="sidebarActions">
+        <button id="reviewBtn" class="sideButton">Review Arena <span id="dueCount">0</span></button>
+        <button id="resetBtn" class="sideButton subtle">Reset progress</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <div>
+          <div id="missionMode" class="eyebrow">RETRIEVAL PRACTICE</div>
+          <h1 id="missionTitle">Variables</h1>
+          <p id="missionSubtitle">Build the skill, then prove you can recall it without copying.</p>
+        </div>
+        <div class="heroBadge">Free Python practice</div>
+      </header>
+
+      <div class="workspace">
+        <section class="card challengeCard">
+          <div class="challengeHead">
+            <div>
+              <div id="challengeType" class="label">RECALL</div>
+              <h2 id="prompt">Create a variable named energy and give it the integer value 100.</h2>
+              <p id="whyText" class="why"></p>
+            </div>
+            <div class="xpPill">+<span id="reward">100</span> XP</div>
+          </div>
+
+          <div class="methodRow" aria-label="Learning method">
+            <span class="methodChip">Recall</span>
+            <span class="methodChip">Predict</span>
+            <span class="methodChip">Debug</span>
+            <span class="methodChip">Build</span>
+            <span class="methodChip">Explain</span>
+          </div>
+
+          <div id="clueBox" class="clueBox">
+            <div class="label">MEMORY CLUE</div>
+            <pre id="clueText">Hidden until you ask for it.</pre>
+          </div>
+
+          <div class="editor">
+            <div class="editorBar"><span>main.py</span><span>PYTHON</span></div>
+            <textarea id="answerInput" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Your answer"></textarea>
+          </div>
+
+          <div class="actions">
+            <button id="hintBtn" class="button secondary">Use hint</button>
+            <button id="runBtn" class="button primary">Run answer</button>
+          </div>
+
+          <div id="feedback" class="feedback" aria-live="polite">
+            <div class="feedbackIcon">⌁</div>
+            <div><strong>Ready.</strong><p>Try from memory first. Getting stuck briefly is part of the training.</p></div>
+          </div>
+
+          <button id="nextBtn" class="button nextButton">Next challenge</button>
+        </section>
+
+        <aside class="rightColumn">
+          <section class="card terminalCard">
+            <div class="terminalHead"><span>TERMINAL</span><span class="activeDot">● ACTIVE</span></div>
+            <div id="terminal" class="terminal"><div><span class="promptSign">$</span> python main.py</div><div class="muted">Waiting for your answer...</div></div>
+          </section>
+
+          <section class="card memoryCard">
+            <div class="label">WHY THIS SHOULD STICK</div>
+            <h3>The 5 step memory loop</h3>
+            <div class="memoryGrid">
+              <div><strong>1. Recall</strong><span>Write syntax without copying.</span></div>
+              <div><strong>2. Predict</strong><span>Decide what code does before checking.</span></div>
+              <div><strong>3. Debug</strong><span>Repair mistakes and learn the pattern.</span></div>
+              <div><strong>4. Build</strong><span>Combine ideas into working code.</span></div>
+              <div><strong>5. Explain</strong><span>Describe why the code works.</span></div>
+            </div>
+          </section>
+
+          <section class="card infoCard">
+            <div class="label">YOUR PROGRESS</div>
+            <h3>Saved on this device</h3>
+            <p>No account is required. Your XP, completed missions, streak, and review queue are stored in your browser.</p>
+          </section>
+        </aside>
+      </div>
+
+      <footer>
+        <strong>Python Memory Quest</strong>
+        <span>Practice real fundamentals through active recall.</span>
+      </footer>
+    </main>
+  </div>
+
+  <div id="modalWrap" class="modalWrap" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="label">MEMORY CHECK</div>
+      <h2 id="modalTitle">Mission cleared</h2>
+      <p id="modalText"></p>
+      <button id="modalClose" class="button primary">Continue</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
