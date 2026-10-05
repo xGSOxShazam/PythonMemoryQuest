@@ -54,3 +54,11 @@ The pre-teaching game is saved on branch **version-2** at commit `65f79c42c06e66
 The adventure now starts at a growing village. Each three encounters form a short quest with a campfire break, saved progress, and a village or cosmetic reward. Practice Python updates a visible coin counter, stat meter, backpack, condition gate, or spell display from the program’s actual printed output. Older skills return through safe village requests. Robe colors and room decorations unlock through quest progress. Unfinished battle answers are saved in this browser; use Backpack to export a progress backup before changing devices.
 
 The previous guided adventure is preserved on the `version-3` branch. The manual **Publish saved game version** workflow can publish `version-1`, `version-2`, `version-3`, or `main`.
+
+## Clear start screen and phone battles
+
+The home screen offers one Start/Continue action. Village exploration, backpack, cosmetics and review requests are collapsed under Explore your village & hero; region navigation appears during the adventure. The mobile battle bar is compact, respects safe-area padding, and follows VisualViewport resize/scroll events. It hides while an answer field is focused, then recalculates after focus leaves and keyboard transitions finish. Desktop docking and pinch zoom retain standard fixed positioning.
+
+Run `node tests/battle-viewport.test.cjs` for viewport and keyboard recovery checks. Physical iPhone Safari validation remains necessary because a desktop viewport cannot reproduce its browser chrome and software keyboard behavior.
+
+Version 4 is preserved on the `version-4` branch and can be republished through the recovery workflow.

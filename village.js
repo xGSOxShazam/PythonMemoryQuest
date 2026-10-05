@@ -50,6 +50,7 @@ function renderVillageShell(){
   if(!el('villageView'))return;
   el('villageView').hidden=gameScreen!=='village';el('campfireView').hidden=gameScreen!=='campfire';el('gameView').hidden=gameScreen!=='adventure';
   if(gameScreen!=='adventure'){el('battleDock').hidden=true;el('celebrationLayer').hidden=true;document.querySelector('.main').classList.add('learningMode');}
+  document.documentElement.classList.toggle('homeScreen',gameScreen!=='adventure');
   applyHeroLook();
   const p=position(),quest=questInfo(p.m,p.c);el('questRibbonTitle').textContent=reviewMode?'Village request · practice familiar moves':quest.title;el('questRibbonProgress').textContent=reviewMode?'Safe review · no HP cost':quest.done+' / 3 encounters cleared';
   if(gameScreen==='village')renderVillage();
@@ -57,12 +58,13 @@ function renderVillageShell(){
 }
 function renderVillage(){
   const count=questCount(),p=nextQuestPosition(),quest=questInfo(p.m,p.c),finished=completedCount()===totalChallenges();
-  el('villageTitle').textContent=count?'Welcome back to Lantern Village':'Welcome to Lantern Village';
-  el('villageGreeting').textContent=count?'Your Python skills are bringing this place back to life. Pick a short adventure or help a neighbor.':'The Code Dragon scattered the villagers. Learn one Python move at a time, rescue your neighbors, and rebuild their home.';
+  el('villageTitle').textContent=completedCount()?'Ready for your next adventure?':'Your adventure starts here';
+  el('homeGuide').innerHTML=originalHero;el('homeQuestLabel').textContent=completedCount()?'YOUR NEXT STEP':'YOUR FIRST QUEST';
+  el('villageGreeting').textContent=completedCount()?'Continue where you left off. Professor Py will guide you.':'Press Start. Professor Py will show you what to do.';
   el('villageGrowth').textContent=count+' / 36 quests completed · '+state.xp+' XP';
   const nextBuilding=villageBuildings.find(b=>b.need>count);el('villageNextUnlock').textContent=nextBuilding?'Next village change: '+nextBuilding.name+' at '+nextBuilding.need+' quests':finished?'Kingdom rescued. Your village is thriving!':'Your village is ready for the final showdown.';
   el('homeQuestTitle').textContent=finished?'The kingdom is safe!':quest.title;el('homeQuestStory').textContent=finished?'Visit your favorite regions or help villagers keep their Python skills sharp.':quest.story;
-  el('homeQuestReward').textContent=finished?'Dragon banner earned':quest.reward;el('continueQuest').textContent=finished?'Revisit the final adventure →':completedCount()?'Continue your adventure →':'Begin your adventure →';
+  el('homeQuestReward').textContent=finished?'Dragon banner earned':quest.reward;el('continueQuest').textContent=finished?'Revisit the final adventure →':completedCount()?'Continue playing →':'Start playing →';
   el('homeQuestSteps').replaceChildren();[0,1,2].forEach(i=>{const c=quest.q*3+i,ch=missions[p.m].challenges[c],step=document.createElement('span');step.textContent=(state.completed[keyOf(p.m,c)]?'✓ ':'○ ')+lessonFor({m:p.m,c}).title;el('homeQuestSteps').append(step);});
   renderVillageScene(count);renderCosmetics(count);renderVillageJobs();
 }

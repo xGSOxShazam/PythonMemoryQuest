@@ -296,6 +296,7 @@ function bossHealth(m,c=position().c){return state.completed[keyOf(m,c)]?0:Math.
 function renderBattle(){
   if(!el("battleDock"))return;
   const p=position(),mission=missions[p.m],battle=battleFor(p.m),gear=heroGear();
+  el('battleDock').classList.toggle('hasCombatSkill',gear.skills.length>0);
   const hits=mission.challenges.filter((_,c)=>state.completed[keyOf(p.m,c)]).length;
   const hp=Math.max(0,Math.min(gear.maxHp,battle.hp)),bossHp=bossHealth(p.m,p.c);const enemyMax=encounterMax(p.c);renderEnemy(p);
   el("battleLabel").textContent=reviewMode?"REVIEW TRAINING":"LEVEL "+(p.m+1)+" · "+mission.title.toUpperCase();

@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
   <div class="appShell">
@@ -42,12 +42,20 @@
 
     <main class="main">
       <section id="villageView" class="villageView" aria-labelledby="villageTitle">
-        <div class="villageHeading"><div><div class="eyebrow">YOUR HOME IN THE PYTHON KINGDOM</div><h1 id="villageTitle">Welcome to Lantern Village</h1><p id="villageGreeting"></p></div><button id="villageBag" class="button secondary">🎒 Backpack</button></div>
-        <div id="villageScene" class="villageScene" aria-label="Your growing village"></div>
-        <div class="villageSummary"><span id="villageGrowth"></span><span id="villageNextUnlock"></span></div>
-        <div class="homeGrid"><section class="card nextQuestCard"><div class="label">YOUR NEXT SHORT ADVENTURE</div><h2 id="homeQuestTitle"></h2><p id="homeQuestStory"></p><div id="homeQuestSteps" class="homeQuestSteps"></div><div class="questReward"><span id="homeQuestReward"></span><span>3 encounters · play at your own pace</span></div><button id="continueQuest" class="button primary">Begin your adventure →</button><p class="savedNote">Your progress and unfinished code are saved on this browser.</p></section>
-        <section class="card roomCard"><div class="label">MAKE THIS PLACE YOURS</div><h2>Your hero &amp; room</h2><div id="roomPreview" class="roomPreview"><div id="villageAvatar"></div><div id="roomDecor"></div></div><div class="label">ROBE COLOR</div><div id="heroColors" class="cosmeticChoices"></div><div class="label">ROOM STYLE</div><div id="roomStyles" class="cosmeticChoices"></div><p id="cosmeticMessage" role="status"></p></section></div>
-        <section class="card villageRequests"><div class="label">VILLAGERS NEED YOUR PYTHON SKILLS</div><h2>Help around the village</h2><div id="villageJobs" class="villageJobs"></div></section>
+        <header class="startHeading"><a class="homeBrand" href="#" aria-label="Python Memory Quest">✦ Python Memory Quest</a><div class="eyebrow">A PYTHON ADVENTURE, ONE SMALL STEP AT A TIME</div><h1 id="villageTitle">Your adventure starts here</h1><p id="villageGreeting">Press Start. Professor Py will show you what to do.</p></header>
+        <section class="card nextQuestCard startCard" aria-labelledby="homeQuestTitle">
+          <div id="homeGuide" class="homeGuide" aria-hidden="true"></div>
+          <div class="startQuest"><div id="homeQuestLabel" class="label">YOUR FIRST QUEST</div><h2 id="homeQuestTitle"></h2><p id="homeQuestStory"></p><button id="continueQuest" class="button primary startButton">Start playing →</button><p class="startDuration">3 small challenges · no timer</p></div>
+          <div class="startHow" aria-label="How to play"><span>📖 Learn a move</span><span>✨ Try it safely</span><span>⚔️ Win a battle</span></div>
+          <div class="questReward"><span id="homeQuestReward"></span></div><p class="savedNote">Your place is saved automatically in this browser.</p>
+          <div id="homeQuestSteps" hidden></div>
+        </section>
+        <details id="homeExtras" class="homeExtras"><summary>Explore your village &amp; hero</summary><div class="homeExtrasContent">
+          <div class="villageHeading"><div><h2>Lantern Village</h2><p>Your village grows with every quest you complete.</p></div><button id="villageBag" class="button secondary">🎒 Backpack</button></div>
+          <div id="villageScene" class="villageScene" aria-label="Your growing village"></div><div class="villageSummary"><span id="villageGrowth"></span><span id="villageNextUnlock"></span></div>
+          <section class="card roomCard"><h2>Your hero &amp; room</h2><div id="roomPreview" class="roomPreview"><div id="villageAvatar"></div><div id="roomDecor"></div></div><div class="label">ROBE COLOR</div><div id="heroColors" class="cosmeticChoices"></div><div class="label">ROOM STYLE</div><div id="roomStyles" class="cosmeticChoices"></div><p id="cosmeticMessage" role="status"></p></section>
+          <section class="card villageRequests"><h2>Help around the village</h2><div id="villageJobs" class="villageJobs"></div></section>
+        </div></details>
       </section>
       <section id="campfireView" class="card campfireView" hidden aria-labelledby="campfireTitle"><div class="eyebrow">A GOOD PLACE TO REST</div><div class="campfireArt" aria-hidden="true">🌲 <span>🔥</span> ⛺</div><h1 id="campfireTitle">Quest complete!</h1><p id="campfireStory"></p><div id="campfireReward" class="campfireReward"></div><p>Your progress is saved. Rest now, or take on the next short adventure.</p><div class="campfireActions"><button id="campfireHome" class="button secondary">Return to the village</button><button id="campfireContinue" class="button primary">Continue your adventure →</button></div></section>
       <div id="gameView" hidden>
@@ -209,10 +217,11 @@
   <script src="challenges.js?v=1"></script>
   <script src="adventure.js?v=3"></script>
   <script src="lessons.js?v=2"></script>
-  <script src="village.js?v=1"></script>
+  <script src="village.js?v=2"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
+  <script src="battle-viewport.js?v=1"></script>
 </body>
 </html>
