@@ -81,25 +81,29 @@
           <div class="lessonCheck"><h3 id="lessonQuestion"></h3><div id="lessonOptions" class="lessonOptions"></div><p id="lessonCheckFeedback" class="lessonCheckFeedback" role="status"></p></div><div class="lessonBottomActions"><button id="lessonBackBtn" class="button secondary">← Read the lesson again</button><button id="lessonEnterBattle" class="button primary" disabled>I'm ready — enter battle ⚔</button></div>
         </div>
       </section>
-      <section id="adventurePanel" class="card adventurePanel" aria-label="Adventure map">
-        <div class="mapHeading"><div><div class="label">PYTHON KINGDOM · GUIDED ADVENTURE</div><h2 id="regionName">Variable Vale</h2></div><span id="mapProgress"></span></div>
-        <p id="mapHelp">Walk with arrow keys or WASD, or click an encounter. Solve its Python challenge to clear the route.</p>
-        <div id="questMap" class="questMap" tabindex="0" role="group" aria-label="Walkable encounter map"></div>
-        <div class="mapFooter"><span id="encounterName" role="status"></span><div class="movePad" aria-label="Movement controls"><button data-move="left" aria-label="Move left">←</button><button data-move="up" aria-label="Move up">↑</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button></div></div>
-      </section>
       <div id="battleWorkspace" class="workspace">
         <section class="card challengeCard">
           <div class="challengeHead">
             <div>
               <div id="challengeType" class="label">RECALL</div>
               <h2 id="prompt">Create a variable named energy and give it the integer value 100.</h2>
-              <p id="whyText" class="why"></p>
             </div>
             <div class="xpPill">+<span id="reward">100</span> XP</div>
           </div>
 
-          <div class="battleLearningTools"><button id="revisitLesson" class="button secondary">Revisit this lesson</button><button id="battleStarter" class="button secondary" hidden>Load boss starter code</button></div>
           <div id="battleContext" class="battleContext" hidden><strong>The game already supplies these values</strong><pre id="battleContextCode"></pre></div>
+
+          <div class="editor">
+            <div class="editorBar"><span>main.py</span><span>PYTHON</span></div>
+            <textarea id="answerInput" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Your answer"></textarea>
+          </div>
+
+          <div class="actions">
+            <button id="hintBtn" class="button secondary">Use hint</button>
+            <button id="runBtn" class="button primary">Run answer</button>
+          </div>
+
+          <div class="battleLearningTools"><button id="revisitLesson" class="button secondary">Revisit this lesson</button><button id="battleStarter" class="button secondary" hidden>Load boss starter code</button></div>
           <div class="methodRow" aria-label="Learning method">
             <span class="methodChip">Recall</span>
             <span class="methodChip">Predict</span>
@@ -113,15 +117,7 @@
             <pre id="clueText">Hidden until you ask for it.</pre>
           </div>
 
-          <div class="editor">
-            <div class="editorBar"><span>main.py</span><span>PYTHON</span></div>
-            <textarea id="answerInput" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Your answer"></textarea>
-          </div>
-
-          <div class="actions">
-            <button id="hintBtn" class="button secondary">Use hint</button>
-            <button id="runBtn" class="button primary">Run answer</button>
-          </div>
+          <p id="whyText" class="why"></p>
 
           <div id="feedback" class="feedback" aria-live="polite">
             <div class="feedbackIcon">⌁</div>
@@ -157,6 +153,13 @@
           </section>
         </aside>
       </div>
+
+      <section id="adventurePanel" class="card adventurePanel" aria-label="Adventure map">
+        <div class="mapHeading"><div><div class="label">PYTHON KINGDOM · GUIDED ADVENTURE</div><h2 id="regionName">Variable Vale</h2></div><span id="mapProgress"></span></div>
+        <p id="mapHelp">Walk with arrow keys or WASD, or click an encounter. Solve its Python challenge to clear the route.</p>
+        <div id="questMap" class="questMap" tabindex="0" role="group" aria-label="Walkable encounter map"></div>
+        <div class="mapFooter"><span id="encounterName" role="status"></span><div class="movePad" aria-label="Movement controls"><button data-move="left" aria-label="Move left">←</button><button data-move="up" aria-label="Move up">↑</button><button data-move="down" aria-label="Move down">↓</button><button data-move="right" aria-label="Move right">→</button></div></div>
+      </section>
 
       <footer>
         <strong>Python Memory Quest</strong>
@@ -216,8 +219,8 @@
   </dialog>
   <script src="challenges.js?v=1"></script>
   <script src="adventure.js?v=3"></script>
-  <script src="lessons.js?v=2"></script>
-  <script src="village.js?v=2"></script>
+  <script src="lessons.js?v=3"></script>
+  <script src="village.js?v=3"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 

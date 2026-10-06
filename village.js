@@ -41,7 +41,7 @@ function initVillage(){
 function saveBattleDraft(){if(!reviewMode&&gameScreen==='adventure'){state.drafts=state.drafts||{};state.drafts[keyOf(position().m,position().c)]=el('answerInput').value;}}
 function showVillage(){if(villageBusy())return;saveBattleDraft();gameScreen='village';reviewMode=false;state.campfire=null;save();render();window.scrollTo({top:0,behavior:'instant'});}
 function startVillageQuest(){
-  if(villageBusy())return;const p=nextQuestPosition();currentMission=p.m;currentChallenge=p.c;state.lastMission=p.m;state.lastChallenge=p.c;state.mapPosition=null;state.campfire=null;reviewMode=false;gameScreen='adventure';save();render();window.scrollTo({top:0,behavior:'instant'});
+  if(villageBusy())return;const p=nextQuestPosition();currentMission=p.m;currentChallenge=p.c;state.lastMission=p.m;state.lastChallenge=p.c;state.mapPosition=null;state.campfire=null;reviewMode=false;gameScreen='adventure';save();render();el(learningActive()?'lessonPanel':'battleWorkspace').scrollIntoView({block:'start'});
 }
 function enterCampfire(m,c){
   battleFor(m).hp=heroGear().maxHp;state.campfire={m,q:Math.floor(c/3)};gameScreen='campfire';reviewMode=false;save();renderVillageShell();window.scrollTo({top:0,behavior:'instant'});
