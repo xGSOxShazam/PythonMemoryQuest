@@ -73,3 +73,10 @@ Practice scenes now read a bounded snapshot of actual Python variables, includin
 The previous live game is preserved on `before-pip-rescue`; select it in **Publish saved game version** to republish it. Earlier version branches remain available.
 
 Run `node tests/journey.test.cjs`, `python tests/python-world.test.py`, and `node tests/battle-viewport.test.cjs` for rescue, protected retries, progress, creations, Python snapshots, and viewport behavior.
+
+
+## Visual quest rewards
+
+Every completed three-encounter quest earns a trophy: a lantern, crystal, star, or region dragon crest, with nine region colors and 36 trophies in total. The campfire reveals the trophy with a short celebration. Players can display any earned trophy in their room through the collection under Explore; the choice is saved and included in progress backups. Collections are derived from completed challenges, so replaying or reviewing cannot duplicate rewards. Older progress unlocks its earned trophies automatically. A trail of glowing village lanterns grows with completed quests, capped at twelve lights for readability. Reduced-motion preferences disable the reward animations.
+
+The previous game is preserved on `before-visual-rewards` and can be republished through **Publish saved game version**. Run `node tests/visual-rewards.test.cjs` to check reward eligibility, locked selections, saved choices, older progress, and replay behavior.

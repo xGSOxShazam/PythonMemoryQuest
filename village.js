@@ -64,15 +64,15 @@ function renderVillage(){
   el('villageGrowth').textContent=count+' / 36 quests completed · '+state.xp+' XP';
   const nextBuilding=villageBuildings.find(b=>b.need>count);el('villageNextUnlock').textContent=nextBuilding?'Next village change: '+nextBuilding.name+' at '+nextBuilding.need+' quests':finished?'Kingdom rescued. Your village is thriving!':'Your village is ready for the final showdown.';
   el('homeQuestTitle').textContent=finished?'The kingdom is safe!':quest.title;el('homeQuestStory').textContent=finished?'Visit your favorite regions or help villagers keep their Python skills sharp.':quest.story;
-  el('homeQuestReward').textContent=finished?'Dragon banner earned':quest.reward;el('continueQuest').textContent=finished?'Revisit the final adventure →':completedCount()?'Continue playing →':'Start playing →';
+  el('homeQuestReward').textContent=finished?'🐉 Dragon banner earned':quest.reward+' · '+questTrophy(p.m,quest.q).name;el('continueQuest').textContent=finished?'Revisit the final adventure →':completedCount()?'Continue playing →':'Start playing →';
   el('homeQuestSteps').replaceChildren();[0,1,2].forEach(i=>{const c=quest.q*3+i,ch=missions[p.m].challenges[c],step=document.createElement('span');step.textContent=(state.completed[keyOf(p.m,c)]?'✓ ':'○ ')+lessonFor({m:p.m,c}).title;el('homeQuestSteps').append(step);});
-  renderVillageScene(count);renderCosmetics(count);renderVillageJobs();renderCreation();
+  renderVillageScene(count);renderCosmetics(count);renderVillageJobs();renderCreation();renderTrophyShelf();
 }
 function renderVillageScene(count){
   const scene=el('villageScene');scene.replaceChildren();
   const landscape=document.createElement('div');landscape.className='villageLandscape';landscape.setAttribute('aria-hidden','true');
   landscape.innerHTML='<svg viewBox="0 0 900 310" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="vSky" x2="0" y2="1"><stop stop-color="#243d69"/><stop offset="1" stop-color="#598f8d"/></linearGradient></defs><rect width="900" height="310" fill="url(#vSky)"/><circle cx="752" cy="53" r="28" fill="#ffe8ae"/><path d="M0 177L130 58l92 104 86-60 99 100L550 70l139 132 126-90 85 76v122H0" fill="#34516a"/><path d="M0 210Q160 151 303 201T603 195T900 192v118H0" fill="#467567"/><path d="M0 254Q225 170 420 245T900 232v78H0" fill="#315f51"/><path d="M415 310Q365 260 501 220T731 153" stroke="#cab68a" stroke-width="21" fill="none" stroke-linecap="round"/><path d="M0 285Q185 262 221 310" stroke="#84ccd0" stroke-width="25" fill="none"/><g fill="#ffeec6"><circle cx="62" cy="42" r="2"/><circle cx="258" cy="29" r="2"/><circle cx="420" cy="57" r="2"/><circle cx="608" cy="33" r="2"/></g></svg>';
-  scene.append(landscape);
+  scene.append(landscape);renderVillageLanterns(scene,count);
   villageBuildings.forEach(b=>{const built=count>=b.need||(b.name==='Fox den'&&state.completed['0:0']);const spot=document.createElement('button');spot.className='villageBuilding'+(built?' built':'');spot.style.left=b.x+'%';spot.style.top=b.y+'%';spot.setAttribute('aria-label',b.name+(built?', restored':', unlocks at '+b.need+' completed quests'));spot.innerHTML='<span class="buildingRoof"></span><span class="buildingBody"><span>'+ (built?b.icon:'🪵')+'</span><i></i></span><small>'+b.name+'</small>';spot.onclick=()=>modal(b.name,built?b.story:'Complete '+b.need+' quests to restore this part of the village. Every three encounters make one quest.');scene.append(spot);});
   if(state.completed['0:0']){const fox=document.createElement('div');fox.className='villageFox';fox.textContent='🦊';fox.setAttribute('aria-label','Pip the rescued fox');scene.append(fox);}
   if(count===36){const flag=document.createElement('div');flag.className='dragonBanner';flag.textContent='🐉 ⚑';scene.append(flag);}
@@ -83,7 +83,7 @@ function applyHeroLook(){
 }
 function renderCosmetics(count){
   el('villageAvatar').innerHTML=originalHero;
-  const room=roomThemes.find(r=>r.id===state.roomStyle&&count>=r.need)||roomThemes[0];el('roomPreview').dataset.theme=room.id;el('roomDecor').textContent=room.decor;
+  const room=roomThemes.find(r=>r.id===state.roomStyle&&count>=r.need)||roomThemes[0];el('roomPreview').dataset.theme=room.id;el('roomDecor').textContent=room.decor;renderRoomTrophy();
   [['heroColors',heroPalettes,'heroColor'],['roomStyles',roomThemes,'roomStyle']].forEach(([id,choices,key])=>{el(id).replaceChildren();choices.forEach(choice=>{const button=document.createElement('button');button.className='cosmeticButton';button.textContent=choice.name+(count<choice.need?' 🔒':'');button.disabled=count<choice.need;button.setAttribute('aria-pressed',(state[key]||choices[0].id)===choice.id?'true':'false');button.title=count<choice.need?'Unlock after '+choice.need+' quests':choice.name;button.onclick=()=>{state[key]=choice.id;save();applyHeroLook();renderCosmetics(count);el('cosmeticMessage').textContent=choice.name+' selected. Saved for your next visit.';};el(id).append(button);});});
 }
 function renderVillageJobs(){
@@ -92,7 +92,7 @@ function renderVillageJobs(){
 }
 function renderCampfire(){
   const saved=state.campfire;if(!saved){showVillage();return;}const quest=questInfo(saved.m,saved.q*3);
-  el('campfireTitle').textContent=quest.title+' — complete!';el('campfireStory').textContent='Three encounters cleared. '+(saved.m===0&&saved.q===0?'Pip the fox followed your lantern home. Look for him in the village!':'Your new Python skills made the village stronger.');el('campfireReward').textContent='✦ '+quest.reward;
+  el('campfireTitle').textContent=quest.title+' — complete!';el('campfireStory').textContent='Three encounters cleared. '+(saved.m===0&&saved.q===0?'Pip the fox followed your lantern home. Look for him in the village!':'Your new Python skills made the village stronger.');el('campfireReward').textContent='✦ '+quest.reward;renderQuestPrize(saved.m,saved.q);
   el('campfireContinue').textContent=completedCount()===totalChallenges()?'Explore your rescued village →':'Continue your adventure →';el('campfireContinue').onclick=completedCount()===totalChallenges()?showVillage:startVillageQuest;
 }
 function capturePracticeWorld(){
@@ -112,4 +112,68 @@ function renderCodeWorld(result=null){
   else if(world.kind==='gate'){const first=text.split('\n')[0],boolean=first==='True'||first==='False';scene.textContent=boolean?(first==='True'?'🧙 🔓 ✨':'🧙 🚪'):'🧙 🛤️';caption.textContent=boolean?'The first printed condition is '+first+'. The practice gate '+(first==='True'?'opened.':'stayed closed.')+' Change the values and try again.':'Your code chose: '+(text||'(nothing printed)')+'. Change the condition to explore another path.';}
   else if(world.kind==='bag'){scene.textContent='🎒 '+(text||'Your code ran');caption.textContent='Your program’s printed inventory or result appears in the backpack display.';}
   else {scene.textContent='🧙 '+(number!==null?'🪙 '+number:text||'✨');caption.textContent=number!==null?'Your printed number updates the practice coin counter.':'Your code’s result appears in the scene. Experiment again!';}
+}
+
+// Quest trophies are earned from completed encounters, never from a separate reward counter.
+const trophyRegions=[
+  {name:'Variable',color:'#69e6c3'}, {name:'Decision',color:'#bb98ff'},
+  {name:'Explorer',color:'#ffcc7b'}, {name:'Loop',color:'#7ed6ff'},
+  {name:'Spell',color:'#fc93c4'}, {name:'Record',color:'#a8e490'},
+  {name:'Rescue',color:'#ffac80'}, {name:'Hero',color:'#a7b2ff'},
+  {name:'Kingdom',color:'#ffe58b'}
+];
+function questTrophy(m,q){
+  const region=trophyRegions[m];
+  return {id:m+':'+q,m,q,color:region.color,name:region.name+' '+['Lantern','Crystal','Star','Dragon Crest'][q],earned:questCleared(m,q)};
+}
+function allQuestTrophies(){return trophyRegions.flatMap((_,m)=>[0,1,2,3].map(q=>questTrophy(m,q)));}
+function trophyArt(trophy){
+  const shapes=[
+    '<path d="M39 34v-8a11 11 0 0 1 22 0v8" fill="none" stroke="currentColor" stroke-width="4"/><path d="M31 37h38l-5 40H36z" fill="currentColor" opacity=".85"/><path d="M31 34h38M35 80h30" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M50 43v27M40 47v20M60 47v20" stroke="#102337" stroke-width="3"/>',
+    '<path d="M50 20l23 23-23 39-23-39z" fill="currentColor"/><path d="M50 20l-9 23 9 39 9-39z" fill="#fff" opacity=".3"/><path d="M27 43h46" stroke="#fff" opacity=".5" stroke-width="2"/>',
+    '<circle cx="50" cy="51" r="30" fill="none" stroke="currentColor" stroke-width="3" opacity=".45"/><path d="M50 19l8 22 23 9-23 8-8 24-9-24-23-8 23-9z" fill="currentColor"/><path d="M50 34l5 12 11 4-11 4-5 14-5-14-11-4 11-4z" fill="#fff" opacity=".6"/>',
+    '<path d="M50 13l33 13v28Q78 77 50 90 22 77 17 54V26z" fill="currentColor" opacity=".2" stroke="currentColor" stroke-width="3"/><path d="M32 67l6-24 12-8 13 7 9 15-15-4-11 8-1 13z" fill="currentColor"/><path d="M39 44l-3-13 13 8M53 38l9-13 2 19" fill="currentColor"/><circle cx="56" cy="46" r="3" fill="#102337"/><path d="M62 59l9 7-9 4" stroke="currentColor" stroke-width="4" fill="none"/>'
+  ];
+  return '<svg viewBox="0 0 100 100" aria-hidden="true" style="color:'+trophy.color+'"><circle cx="50" cy="50" r="46" fill="#102337"/>'+shapes[trophy.q]+'</svg>';
+}
+function displayedTrophy(){
+  const earned=allQuestTrophies().filter(t=>t.earned);
+  return earned.find(t=>t.id===state.displayTrophy)||earned.at(-1)||null;
+}
+function displayTrophy(trophy){
+  if(villageBusy()||!questCleared(trophy.m,trophy.q))return false;
+  state.displayTrophy=trophy.id;save();renderRoomTrophy();renderTrophyShelf();
+  return true;
+}
+function renderRoomTrophy(){
+  const trophy=displayedTrophy(),spot=el('roomTrophy');spot.hidden=!trophy;
+  if(!trophy){spot.replaceChildren();return;}
+  spot.innerHTML=trophyArt(trophy);spot.setAttribute('aria-label',trophy.name+' displayed in your room');spot.title=trophy.name;
+}
+function renderTrophyShelf(){
+  const trophies=allQuestTrophies(),earned=trophies.filter(t=>t.earned),next=trophies.find(t=>!t.earned),selected=displayedTrophy();
+  el('trophyCount').textContent=earned.length+' / 36';el('trophyShelf').replaceChildren();
+  [...earned,...(next?[next]:[])].forEach(trophy=>{
+    const button=document.createElement('button');button.className='trophyTile'+(trophy.earned?'':' trophyLocked');button.disabled=!trophy.earned;
+    button.setAttribute('aria-label',trophy.name+(trophy.earned?', display in your room':', locked. Complete '+questStories[trophy.m][trophy.q][0]));
+    button.setAttribute('aria-pressed',selected?.id===trophy.id?'true':'false');
+    const art=document.createElement('div');art.innerHTML=trophyArt(trophy);
+    const name=document.createElement('strong');name.textContent=trophy.name;
+    const caption=document.createElement('small');caption.textContent=trophy.earned?(selected?.id===trophy.id?'On display':'Display in room'):'Next trophy · '+questInfo(trophy.m,trophy.q*3).done+' / 3 challenges';
+    button.append(art,name,caption);button.onclick=()=>{if(displayTrophy(trophy))el('trophyMessage').textContent=trophy.name+' is displayed in your room. Saved!';};el('trophyShelf').append(button);
+  });
+}
+function renderQuestPrize(m,q){
+  const trophy=questTrophy(m,q);el('questPrize').hidden=!trophy.earned;if(!trophy.earned)return;
+  el('prizeArt').innerHTML=trophyArt(trophy);el('prizeName').textContent=trophy.name;
+  el('prizeDetail').textContent=q===3?'A dragon crest for completing every encounter in '+missions[m].title+'.':'Three Python challenges, one new trophy. Your village has another glowing lantern!';
+  el('prizeMessage').textContent=state.displayTrophy===trophy.id?'Displayed in your room.':'';
+  el('displayPrize').textContent=state.displayTrophy===trophy.id?'Displayed ✓':'Display in my room';
+  el('displayPrize').onclick=()=>{if(displayTrophy(trophy)){el('displayPrize').textContent='Displayed ✓';el('prizeMessage').textContent=trophy.name+' is now in your room. Saved!';}};
+}
+function renderVillageLanterns(scene,count){
+  if(!count)return;
+  const trail=document.createElement('div');trail.className='villageLanternTrail';trail.setAttribute('aria-hidden','true');
+  for(let i=0;i<Math.min(count,12);i++){const light=document.createElement('span');light.className='earnedLantern';light.textContent='🏮';light.style.setProperty('--lantern-delay',i*.07+'s');trail.append(light);}
+  scene.append(trail);
 }

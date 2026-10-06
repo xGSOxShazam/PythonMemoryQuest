@@ -6,7 +6,7 @@
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=9">
+  <link rel="stylesheet" href="styles.css?v=10">
 </head>
 <body>
   <div class="appShell">
@@ -54,11 +54,12 @@
           <div class="villageHeading"><div><h2>Lantern Village</h2><p>Your village grows with every quest you complete.</p></div><button id="villageBag" class="button secondary">🎒 Backpack</button></div>
           <div id="villageScene" class="villageScene" aria-label="Your growing village"></div><div class="villageSummary"><span id="villageGrowth"></span><span id="villageNextUnlock"></span></div>
           <section class="card creationCard"><h2>Your Python workshop</h2><p id="creationUnlock">Rescue Pip to unlock a creation of your own.</p><div id="creationTools" hidden><p>Change your companion’s name and give them a snack. This workshop is safe.</p><label for="creationCode" class="label">YOUR CREATION · PYTHON</label><textarea id="creationCode" aria-label="Your creation code" spellcheck="false" autocapitalize="off"></textarea><button id="creationRun" class="button secondary">Build my creation ✨</button><div id="creationScene" class="creationScene"></div><p id="creationFeedback" role="status"></p></div></section>
-          <section class="card roomCard"><h2>Your hero &amp; room</h2><div id="roomPreview" class="roomPreview"><div id="villageAvatar"></div><div id="roomDecor"></div></div><div class="label">ROBE COLOR</div><div id="heroColors" class="cosmeticChoices"></div><div class="label">ROOM STYLE</div><div id="roomStyles" class="cosmeticChoices"></div><p id="cosmeticMessage" role="status"></p></section>
+          <section class="card trophyCard"><details id="trophyCollection"><summary>Your trophy collection <span id="trophyCount"></span></summary><p>Earn a trophy every three challenges. Pick one to display in your room.</p><div id="trophyShelf" class="trophyShelf"></div><p id="trophyMessage" role="status"></p></details></section>
+          <section class="card roomCard"><h2>Your hero &amp; room</h2><div id="roomPreview" class="roomPreview"><div id="villageAvatar"></div><div id="roomDecor"></div><div id="roomTrophy" class="roomTrophy" hidden></div></div><div class="label">ROBE COLOR</div><div id="heroColors" class="cosmeticChoices"></div><div class="label">ROOM STYLE</div><div id="roomStyles" class="cosmeticChoices"></div><p id="cosmeticMessage" role="status"></p></section>
           <section class="card villageRequests"><h2>Help around the village</h2><div id="villageJobs" class="villageJobs"></div></section>
         </div></details>
       </section>
-      <section id="campfireView" class="card campfireView" hidden aria-labelledby="campfireTitle"><div class="eyebrow">A GOOD PLACE TO REST</div><div class="campfireArt" aria-hidden="true">🌲 <span>🔥</span> ⛺</div><h1 id="campfireTitle">Quest complete!</h1><p id="campfireStory"></p><div id="campfireReward" class="campfireReward"></div><p>Your progress is saved. Rest now, or take on the next short adventure.</p><div class="campfireActions"><button id="campfireHome" class="button secondary">Return to the village</button><button id="campfireContinue" class="button primary">Continue your adventure →</button></div></section>
+      <section id="campfireView" class="card campfireView" hidden aria-labelledby="campfireTitle"><div class="eyebrow">A GOOD PLACE TO REST</div><div class="campfireArt" aria-hidden="true">🌲 <span>🔥</span> ⛺</div><h1 id="campfireTitle">Quest complete!</h1><p id="campfireStory"></p><section id="questPrize" class="questPrize" aria-labelledby="prizeName"><div class="prizeSparkles" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div><div class="label">NEW QUEST TROPHY</div><div id="prizeArt" class="prizeArt" aria-hidden="true"></div><h2 id="prizeName"></h2><p id="prizeDetail"></p><div id="campfireReward" class="campfireReward"></div><button id="displayPrize" class="button secondary">Display in my room</button><p id="prizeMessage" role="status"></p></section><p>Your progress is saved. Rest now, or take on the next short adventure.</p><div class="campfireActions"><button id="campfireHome" class="button secondary">Return to the village</button><button id="campfireContinue" class="button primary">Continue your adventure →</button></div></section>
       <div id="gameView" hidden>
       <header class="hero">
         <div>
@@ -226,9 +227,9 @@
     <div class="saveTools"><button id="exportSave" class="button secondary">Download progress backup</button><label class="button secondary" for="importSave">Restore progress backup</label><input id="importSave" type="file" accept="application/json,.json" hidden></div><p id="bagMessage" role="status"></p>
   </dialog>
   <script src="challenges.js?v=1"></script>
-  <script src="adventure.js?v=4"></script>
+  <script src="adventure.js?v=5"></script>
   <script src="lessons.js?v=4"></script>
-  <script src="village.js?v=4"></script>
+  <script src="village.js?v=5"></script>
   <script src="rescue.js?v=1"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
