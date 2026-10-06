@@ -60,11 +60,30 @@ except BaseException:
     _pmq_ok = False
     traceback.print_exc(file=_pmq_stderr)
 
+# Only simple, bounded game values leave the isolated Python namespace.
+import math
+
+def _pmq_safe(value, depth=0):
+    if type(value) in (str, bool, int) or value is None:
+        return value[:200] if type(value) is str else (value if type(value) is not int or abs(value) < 10**100 else None)
+    if type(value) is float:
+        return value if math.isfinite(value) else None
+    if depth < 2 and type(value) in (list, tuple):
+        return [_pmq_safe(item, depth+1) for item in value[:12]]
+    if depth < 2 and type(value) is dict:
+        return {str(key)[:40]: _pmq_safe(item, depth+1) for key, item in list(value.items())[:12] if type(key) in (str, int)}
+    return None
+
+_pmq_world = {key: _pmq_safe(_pmq_namespace[key]) for key in
+    ('energy', 'hp', 'coins', 'pet', 'name', 'tools', 'inventory', 'bag', 'shield', 'gate_open')
+    if key in _pmq_namespace} if _pmq_ok else {}
+
 json.dumps({
     "ok": _pmq_ok,
     "verified": _pmq_verified,
     "stdout": _pmq_stdout.getvalue(),
-    "stderr": _pmq_stderr.getvalue()
+    "stderr": _pmq_stderr.getvalue(),
+    "world": _pmq_world
 })
 `);
 

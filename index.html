@@ -6,7 +6,7 @@
   <meta name="description" content="Python Memory Quest is a free game based website for learning Python through recall, prediction, debugging, building, and spaced review.">
   <meta name="theme-color" content="#08111b">
   <title>Python Memory Quest</title>
-  <link rel="stylesheet" href="styles.css?v=8">
+  <link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
   <div class="appShell">
@@ -53,6 +53,7 @@
         <details id="homeExtras" class="homeExtras"><summary>Explore your village &amp; hero</summary><div class="homeExtrasContent">
           <div class="villageHeading"><div><h2>Lantern Village</h2><p>Your village grows with every quest you complete.</p></div><button id="villageBag" class="button secondary">🎒 Backpack</button></div>
           <div id="villageScene" class="villageScene" aria-label="Your growing village"></div><div class="villageSummary"><span id="villageGrowth"></span><span id="villageNextUnlock"></span></div>
+          <section class="card creationCard"><h2>Your Python workshop</h2><p id="creationUnlock">Rescue Pip to unlock a creation of your own.</p><div id="creationTools" hidden><p>Change your companion’s name and give them a snack. This workshop is safe.</p><label for="creationCode" class="label">YOUR CREATION · PYTHON</label><textarea id="creationCode" aria-label="Your creation code" spellcheck="false" autocapitalize="off"></textarea><button id="creationRun" class="button secondary">Build my creation ✨</button><div id="creationScene" class="creationScene"></div><p id="creationFeedback" role="status"></p></div></section>
           <section class="card roomCard"><h2>Your hero &amp; room</h2><div id="roomPreview" class="roomPreview"><div id="villageAvatar"></div><div id="roomDecor"></div></div><div class="label">ROBE COLOR</div><div id="heroColors" class="cosmeticChoices"></div><div class="label">ROOM STYLE</div><div id="roomStyles" class="cosmeticChoices"></div><p id="cosmeticMessage" role="status"></p></section>
           <section class="card villageRequests"><h2>Help around the village</h2><div id="villageJobs" class="villageJobs"></div></section>
         </div></details>
@@ -69,6 +70,11 @@
       </header>
       <div id="questRibbon" class="questRibbon"><div><span class="label">SHORT QUEST</span><strong id="questRibbonTitle"></strong></div><span id="questRibbonProgress"></span></div>
 
+      <section id="rescueIntro" class="card rescueIntro" hidden aria-labelledby="rescueTitle">
+        <div class="label">YOUR FIRST PYTHON POWER · TRAINING SHIELD ON</div><h2 id="rescueTitle">Light the gate. Rescue Pip.</h2><div id="rescueScene" class="rescueScene" aria-label="Pip is waiting behind a dark gate"></div>
+        <p class="rescueInstruction">Give the lantern <strong>100 energy</strong> to open Pip’s gate.</p><p class="rescueRule"><code>energy = 100</code> means “store 100 under the name energy.”</p>
+        <label for="rescueCode" class="label">FINISH THIS LINE OF PYTHON</label><textarea id="rescueCode" aria-label="Your rescue code" spellcheck="false" autocapitalize="off"></textarea><button id="rescueRun" class="button primary">Power the lantern ✨</button><p id="rescueFeedback" role="status">Type 100 after the equals sign, then power the lantern. Mistakes cost no HP.</p><button id="rescueNext" class="button primary" hidden>Travel with Pip →</button>
+      </section>
       <section id="lessonPanel" class="card lessonPanel" aria-labelledby="lessonTitle">
         <div class="lessonHeader"><span class="mentorPortrait" aria-hidden="true">🧙</span><div><div class="label">YOUR GUIDE · PROFESSOR PY</div><h2 id="lessonTitle"></h2><p id="lessonProgress"></p></div></div>
         <div class="lessonRoad"><span id="lessonLearnTab" class="active">1 · Learn</span><span id="lessonTryTab">2 · Try safely</span><span>3 · Battle</span></div>
@@ -83,6 +89,7 @@
       </section>
       <div id="battleWorkspace" class="workspace">
         <section class="card challengeCard">
+          <div id="encounterGoal" class="encounterGoal" role="status"></div>
           <div class="challengeHead">
             <div>
               <div id="challengeType" class="label">RECALL</div>
@@ -117,6 +124,7 @@
             <pre id="clueText">Hidden until you ask for it.</pre>
           </div>
 
+          <details id="pipHelp" class="pipHelp" hidden><summary>🦊 Ask Pip for a nudge</summary><p id="pipAdvice"></p></details>
           <p id="whyText" class="why"></p>
 
           <div id="feedback" class="feedback" aria-live="polite">
@@ -196,7 +204,7 @@
       <div class="dragonSprite">
         <svg viewBox="0 0 260 150"><path d="M150 89Q206 52 250 107Q211 91 184 122" fill="#873b86" stroke="#d785a2" stroke-width="3"/><path d="M129 86L163 7l13 34 29-9-12 32 26 19-48 26" fill="#75448e" stroke="#d28cbc" stroke-width="3"/><path d="M131 87L164 19l-1 42 23-17-15 30 33 11-40 13" fill="#b268a1"/><ellipse cx="141" cy="110" rx="51" ry="31" fill="#944f91" stroke="#e99ab9" stroke-width="3"/><path d="M103 85Q83 67 64 75L34 66 19 81l16 21 46 8 30 19" fill="#a15b9e" stroke="#e99ab9" stroke-width="3"/><path d="M56 71L60 44 76 73M86 81l11-23 6 33" fill="#ffce83" stroke="#cc966a" stroke-width="3"/><path d="M47 99l6 10 6-9 6 9 6-9" fill="#fff0ca"/><path d="M47 85l18 5" stroke="#301b40" stroke-width="5"/><circle cx="56" cy="86" r="4" fill="#ffdc70"/><path d="M114 116l-15 24h25l13-22m24-3 12 25h25l-24-26" fill="#87407f" stroke="#e99ab9" stroke-width="3"/><path d="M110 99q21 2 32 26" fill="none" stroke="#edb67d" stroke-width="12"/><path d="M94 93l-14 19" stroke="#e99ab9" stroke-width="7" stroke-linecap="round"/></svg>
       </div>
-      <div class="fireBolt"></div><div id="battleHit" class="battleHit"></div>
+      <div class="fireBolt"></div><div id="battleHit" class="battleHit"></div><span id="battlePip" class="battlePip" hidden aria-hidden="true">🦊</span>
     </div>
     <div class="battleVitals">
       <div class="hpLabel"><strong>YOUR HERO</strong><span id="heroHpText">100 / 100 HP</span></div>
@@ -218,13 +226,14 @@
     <div class="saveTools"><button id="exportSave" class="button secondary">Download progress backup</button><label class="button secondary" for="importSave">Restore progress backup</label><input id="importSave" type="file" accept="application/json,.json" hidden></div><p id="bagMessage" role="status"></p>
   </dialog>
   <script src="challenges.js?v=1"></script>
-  <script src="adventure.js?v=3"></script>
-  <script src="lessons.js?v=3"></script>
-  <script src="village.js?v=3"></script>
+  <script src="adventure.js?v=4"></script>
+  <script src="lessons.js?v=4"></script>
+  <script src="village.js?v=4"></script>
+  <script src="rescue.js?v=1"></script>
   <div id="celebrationLayer" aria-hidden="true"></div>
   <div id="celebrationStatus" class="srOnly" role="status" aria-live="polite"></div>
 
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
   <script src="battle-viewport.js?v=1"></script>
 </body>
 </html>

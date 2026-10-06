@@ -62,3 +62,14 @@ The home screen offers one Start/Continue action. Village exploration, backpack,
 Run `node tests/battle-viewport.test.cjs` for viewport and keyboard recovery checks. Physical iPhone Safari validation remains necessary because a desktop viewport cannot reproduce its browser chrome and software keyboard behavior.
 
 Version 4 is preserved on the `version-4` branch and can be republished through the recovery workflow.
+
+
+## Pip rescue and Python creations
+
+New players begin with one visible task: set `energy = 100` to power a lantern and free Pip. The first three encounters have a training shield, so mistakes cost no HP. Pip then accompanies the hero and offers optional concept reminders. Encounter prompts describe a chest, trap, spirit, or sentinel to give the Python task a purpose.
+
+Practice scenes now read a bounded snapshot of actual Python variables, including HP, energy, coins, inventory, and Boolean gates; `print()` is optional for these scenes. After rescuing Pip, the village workshop lets players write Python to name their companion and choose its snacks. The saved creation and draft survive reloads and are included in progress backups. Invalid creations keep the last successful version.
+
+The previous live game is preserved on `before-pip-rescue`; select it in **Publish saved game version** to republish it. Earlier version branches remain available.
+
+Run `node tests/journey.test.cjs`, `python tests/python-world.test.py`, and `node tests/battle-viewport.test.cjs` for rescue, protected retries, progress, creations, Python snapshots, and viewport behavior.

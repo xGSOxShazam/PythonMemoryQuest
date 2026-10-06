@@ -143,7 +143,7 @@ function createPythonWorker(){
     workerReady=false;
     workerError=null;
     setRuntimeStatus("LOADING PYTHON");
-    pythonWorker=new Worker("python-worker.js?v=4",{type:"module"});
+    pythonWorker=new Worker("python-worker.js?v=5",{type:"module"});
     pythonWorker.onmessage=(event)=>{
       const msg=event.data||{};
       if(msg.type==="ready"){
@@ -233,7 +233,7 @@ function runtimeConfigFor(p){
 function isCodeChallenge(ch){
   return ch.type!=="Predict" && ch.type!=="Explain";
 }
-async function runAnswer(){if(gameScreen!=="adventure"||el("runBtn").disabled||lessonBusy||learningActive())return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);if(!answer.trim()){el("feedback").textContent="Write an answer first. Your hero keeps their HP.";return;}if(!reviewMode&&battleFor(p.m).hp<=0){el("battleMessage").textContent="Your hero needs a rest. Click Revive hero to continue.";el("reviveBtn").focus();return;}state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=!!ch.test(answer);}catch(e){ok=false;}
+async function runAnswer(){if(gameScreen!=="adventure"||el("runBtn").disabled||lessonBusy||(learningActive()&&!openingRescueActive()))return;el("nextBtn").style.display="none";const ch=current(),answer=el("answerInput").value,p=position(),k=keyOf(p.m,p.c);if(!answer.trim()){el("feedback").textContent="Write an answer first. Your hero keeps their HP.";return;}if(!reviewMode&&battleFor(p.m).hp<=0){el("battleMessage").textContent="Your hero needs a rest. Click Revive hero to continue.";el("reviveBtn").focus();return;}state.attempts[k]=(state.attempts[k]||0)+1;let ok=false;let runtimeResult=null;try{ok=openingRescueActive()?true:!!ch.test(answer);}catch(e){ok=false;}
 if(ok&&isCodeChallenge(ch)){
   el("runBtn").disabled=true;
   el("runBtn").textContent="Running Python...";
@@ -262,7 +262,7 @@ if(ok){el("mistakeCoach").hidden=true;el("coachAdvice").hidden=true;el("runBtn")
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+(printed?escapeHtml(printed):'Program completed successfully.<br><span class="muted">No printed output.</span>')+'</div>';
 }else{
   el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="success">'+escapeHtml(ch.output)+'</div>';
-}el("nextBtn").style.display="block";updateStats();renderMissionList();renderAdventure();renderVillageShell();celebrate(awarded,levelBefore);announceReward(p.m);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;battleOutcome(false,false,p);save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");teachingFeedback(p,runtimeResult);el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
+}el("nextBtn").style.display="block";updateStats();renderMissionList();renderAdventure();renderVillageShell();renderJourney(runtimeResult);celebrate(awarded,levelBefore);announceReward(p.m);}else{el("runBtn").disabled=false;el("runBtn").textContent="Try again";state.streak=0;battleOutcome(false,false,p);save();updateStats();el("feedback").className="feedback bad";el("feedback").innerHTML='<div class="feedbackIcon">!</div><div><strong>Attempt '+state.attempts[k]+': try again.</strong><p>'+(k==="0:2"?"Put the name Alex in quotation marks, with a capital A. Python text is case-sensitive.":"Edit your answer, then click Try again. Check names, punctuation, and indentation; Use hint can help.")+'</p></div>';const detail=runtimeResult&&runtimeResult.stderr?runtimeResult.stderr:(runtimeResult&&runtimeResult.verified===false?"Your Python ran, but the result did not match the challenge yet.":"Answer checked. Edit your answer and try again.");teachingFeedback(p,runtimeResult);renderJourney(runtimeResult);el("terminal").innerHTML='<div><span class="promptSign">$</span> python main.py</div><div class="error">'+escapeHtml(detail)+'</div>';}}
 const levelRewards=[
   {name:"Crystal Staff",kind:"Equipment upgrade",description:"Normal attacks gain +2 damage.",attack:2},
   {name:"Arcane Bolt",kind:"Skill unlocked",description:"Charge with 6 new challenges, then deal 25 bonus damage.",skill:{id:"arcane",name:"Arcane Bolt",damage:25}},
@@ -332,6 +332,7 @@ function renderBattle(){
   else if(missionCleared(p.m))el("battleMessage").textContent="Level cleared! "+levelRewards[p.m].name+" earned.";
   else if(bossHp===0)el("battleMessage").textContent=state.completed[keyOf(p.m,p.c)]?"Encounter cleared! Continue along the map.":"Enemy defeated! Solve the challenge to open the route.";
   else if(reviewMode)el("battleMessage").textContent="Practice arena · Review answers do not cost HP or charge skills.";
+  else if(trainingShieldActive(p))el("battleMessage").textContent="Training shield on · mistakes cost no HP";
   else el("battleMessage").textContent="Correct: enemy −"+(p.c===11?gear.attack*(p.m===8?10:3):gear.attack)+" HP · Wrong: hero −"+Math.max(1,8-gear.armor)+" HP";
 }
 function animateBattle(kind,damage){
@@ -344,8 +345,8 @@ function battleOutcome(ok,first,p){
   if(reviewMode)return;
   const battle=battleFor(p.m),gear=heroGear(first&&missionCleared(p.m)?p.m:-1);const damage=gear.attack*(p.c===11?(p.m===8?10:3):1);
   if(ok&&first){encounterBattle(p).damage+=damage;battle.damageDealt+=damage;if(gear.skills.length)state.skillCharge=Math.min(6,state.skillCharge+1);}
-  if(!ok&&!state.completed[keyOf(p.m,p.c)])battle.hp=Math.max(0,battle.hp-Math.max(1,8-gear.armor));
-  animateBattle(ok?"heroAttacks":"dragonAttacks",ok?(first?"−"+damage:"PRACTICE"):"−"+Math.max(1,8-gear.armor));
+  if(!ok&&!trainingShieldActive(p)&&!state.completed[keyOf(p.m,p.c)])battle.hp=Math.max(0,battle.hp-Math.max(1,8-gear.armor));
+  animateBattle(ok?"heroAttacks":"dragonAttacks",ok?(first?"−"+damage:"PRACTICE"):trainingShieldActive(p)?"SHIELD":"−"+Math.max(1,8-gear.armor));
 }
 function useSkill(){
   const p=position(),battle=battleFor(p.m),skill=heroGear().skills.find(s=>s.id===state.activeSkill);
@@ -403,5 +404,6 @@ if(typeof ResizeObserver!=="undefined"){
 initAdventure();
 initTeaching();
 initVillage();
+initJourney();
 render();
 setTimeout(()=>createPythonWorker(),0);

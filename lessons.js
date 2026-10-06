@@ -106,7 +106,7 @@ function initTeaching(){
   el('lessonTryBtn').onclick=()=>{lessonPhase='try';renderTeaching();el('lessonCodeInput').focus();};
   el('lessonBackBtn').onclick=()=>{lessonPhase='learn';renderTeaching();};
   el('lessonRunDemo').onclick=runLessonDemo;
-  el('lessonResetDemo').onclick=()=>{if(!lessonBusy){el('lessonCodeInput').value=lessonFor(position()).code;el('lessonDemoOutput').textContent='Example restored. Try changing a value and run it.';}};
+  el('lessonResetDemo').onclick=()=>{if(!lessonBusy){el('lessonCodeInput').value=lessonFor(position()).code;el('lessonDemoOutput').textContent='Example restored. Try changing a value and run it.';renderCodeWorld();}};
   el('lessonEnterBattle').onclick=()=>{if(!lessonChoicePassed||lessonBusy)return;state.lessonDone[keyOf(position().m,position().c)]=true;forcedLesson=false;save();renderBattle();renderTeaching();el('answerInput').focus({preventScroll:true});el('battleWorkspace').scrollIntoView({block:'start'});};
   el('revisitLesson').onclick=()=>{if(el('runBtn').disabled||lessonBusy)return;forcedLesson=true;lessonPhase='learn';lessonStep=0;lessonChoicePassed=false;renderTeaching();el('lessonTitle').scrollIntoView({block:'start'});};
   el('battleStarter').onclick=()=>{if(el('runBtn').disabled||lessonBusy)return;const starter=current().starter;if(starter&&(!el('answerInput').value.trim()||confirm('Replace your current code with the starter?'))){el('answerInput').value=starter;el('answerInput').focus();}};
@@ -135,7 +135,7 @@ function renderTeaching(){
   el('battleContext').hidden=!current().runtime?.setup;el('battleContextCode').textContent=current().runtime?.setup||'';
   el('coachAdvice').hidden=true;el('mistakeCoach').hidden=true;
   el('bossPlan').hidden=!(p.m===8&&p.c===11);
-  renderCodeWorld();renderVillageShell();
+  el('adventurePanel').hidden=false;renderCodeWorld();renderJourney();renderVillageShell();
 }
 function renderLessonTrace(){
   const lesson=lessonFor(position());el('lessonExample').textContent=lesson.code;

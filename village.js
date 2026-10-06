@@ -1,5 +1,5 @@
 const questStories=[
-  [['Light the first lantern','Professor Py needs a brave helper. Learn to store numbers and text, then clear the path to the village.','Rescue Pip the fox · unlock violet robes'],['Repair the treasure counter','The village shop lost track of its coins. Help the shopkeeper name, count, and update values.','Open the workshop · unlock a book nook'],['Power the watchtower','Collect energy and work out the right numbers to bring the village lights back.','Grow the garden · unlock sunset robes'],['Drive back the Vale dragon','Put your new variable skills to work and face the dragon guarding the road.','Restore the fountain · unlock a plant-filled room']],
+  [['Light the first lantern','Pip is trapped behind a dark gate. Your first line of Python can light the way.','Bring Pip home · unlock violet robes'],['Repair the treasure counter','The village shop lost track of its coins. Help the shopkeeper name, count, and update values.','Open the workshop · unlock a book nook'],['Power the watchtower','Collect energy and work out the right numbers to bring the village lights back.','Grow the garden · unlock sunset robes'],['Drive back the Vale dragon','Put your new variable skills to work and face the dragon guarding the road.','Restore the fountain · unlock a plant-filled room']],
   [['Choose the safe road','Help the scout decide when to fight and when to heal.','Light another village lantern'],['Open the market gates','Use comparisons to decide who has enough coins and who needs help.','Bring traders back to the village'],['Send the right signal','Combine conditions to guide the village guards.','Restore the market square'],['Outsmart the crossroads dragon','Choose the right path through the dragon’s defenses.','Unlock starry room decorations']],
   [['Pack for the expedition','Build an inventory and find the items the explorer needs.','Welcome the explorer home'],['Sort the supply wagon','Count and add supplies for the next adventure.','Restock the village shelves'],['Fix the enchanted backpack','Replace broken items and collect a useful section of your supplies.','Rebuild the library'],['Recover the dragon’s treasure','Find and total the items hidden beyond the forest.','Add a library lantern']],
   [['Practice a spell volley','Use loops to repeat your hero’s moves.','Restore the training grounds'],['Count the incoming hits','Build totals and countdowns to prepare the village defenses.','Welcome the village trainer'],['Find the strongest allies','Stop, skip, and choose what belongs in your team.','Build a lookout post'],['Break the marsh dragon’s cycle','Use repeated instructions to clear the last stretch of the marsh.','Light the lookout beacon']],
@@ -41,7 +41,7 @@ function initVillage(){
 function saveBattleDraft(){if(!reviewMode&&gameScreen==='adventure'){state.drafts=state.drafts||{};state.drafts[keyOf(position().m,position().c)]=el('answerInput').value;}}
 function showVillage(){if(villageBusy())return;saveBattleDraft();gameScreen='village';reviewMode=false;state.campfire=null;save();render();window.scrollTo({top:0,behavior:'instant'});}
 function startVillageQuest(){
-  if(villageBusy())return;const p=nextQuestPosition();currentMission=p.m;currentChallenge=p.c;state.lastMission=p.m;state.lastChallenge=p.c;state.mapPosition=null;state.campfire=null;reviewMode=false;gameScreen='adventure';save();render();el(learningActive()?'lessonPanel':'battleWorkspace').scrollIntoView({block:'start'});
+  if(villageBusy())return;const p=nextQuestPosition();currentMission=p.m;currentChallenge=p.c;state.lastMission=p.m;state.lastChallenge=p.c;state.mapPosition=null;state.campfire=null;reviewMode=false;gameScreen='adventure';save();render();el(openingRescueActive()?'rescueIntro':learningActive()?'lessonPanel':'battleWorkspace').scrollIntoView({block:'start'});
 }
 function enterCampfire(m,c){
   battleFor(m).hp=heroGear().maxHp;state.campfire={m,q:Math.floor(c/3)};gameScreen='campfire';reviewMode=false;save();renderVillageShell();window.scrollTo({top:0,behavior:'instant'});
@@ -50,7 +50,7 @@ function renderVillageShell(){
   if(!el('villageView'))return;
   el('villageView').hidden=gameScreen!=='village';el('campfireView').hidden=gameScreen!=='campfire';el('gameView').hidden=gameScreen!=='adventure';
   if(gameScreen!=='adventure'){el('battleDock').hidden=true;el('celebrationLayer').hidden=true;document.querySelector('.main').classList.add('learningMode');}
-  document.documentElement.classList.toggle('homeScreen',gameScreen!=='adventure');
+  document.documentElement.classList.toggle('homeScreen',gameScreen!=='adventure'||openingRescueActive());
   applyHeroLook();
   const p=position(),quest=questInfo(p.m,p.c);el('questRibbonTitle').textContent=reviewMode?'Village request · practice familiar moves':quest.title;el('questRibbonProgress').textContent=reviewMode?'Safe review · no HP cost':quest.done+' / 3 encounters cleared';
   if(gameScreen==='village')renderVillage();
@@ -66,15 +66,15 @@ function renderVillage(){
   el('homeQuestTitle').textContent=finished?'The kingdom is safe!':quest.title;el('homeQuestStory').textContent=finished?'Visit your favorite regions or help villagers keep their Python skills sharp.':quest.story;
   el('homeQuestReward').textContent=finished?'Dragon banner earned':quest.reward;el('continueQuest').textContent=finished?'Revisit the final adventure →':completedCount()?'Continue playing →':'Start playing →';
   el('homeQuestSteps').replaceChildren();[0,1,2].forEach(i=>{const c=quest.q*3+i,ch=missions[p.m].challenges[c],step=document.createElement('span');step.textContent=(state.completed[keyOf(p.m,c)]?'✓ ':'○ ')+lessonFor({m:p.m,c}).title;el('homeQuestSteps').append(step);});
-  renderVillageScene(count);renderCosmetics(count);renderVillageJobs();
+  renderVillageScene(count);renderCosmetics(count);renderVillageJobs();renderCreation();
 }
 function renderVillageScene(count){
   const scene=el('villageScene');scene.replaceChildren();
   const landscape=document.createElement('div');landscape.className='villageLandscape';landscape.setAttribute('aria-hidden','true');
   landscape.innerHTML='<svg viewBox="0 0 900 310" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="vSky" x2="0" y2="1"><stop stop-color="#243d69"/><stop offset="1" stop-color="#598f8d"/></linearGradient></defs><rect width="900" height="310" fill="url(#vSky)"/><circle cx="752" cy="53" r="28" fill="#ffe8ae"/><path d="M0 177L130 58l92 104 86-60 99 100L550 70l139 132 126-90 85 76v122H0" fill="#34516a"/><path d="M0 210Q160 151 303 201T603 195T900 192v118H0" fill="#467567"/><path d="M0 254Q225 170 420 245T900 232v78H0" fill="#315f51"/><path d="M415 310Q365 260 501 220T731 153" stroke="#cab68a" stroke-width="21" fill="none" stroke-linecap="round"/><path d="M0 285Q185 262 221 310" stroke="#84ccd0" stroke-width="25" fill="none"/><g fill="#ffeec6"><circle cx="62" cy="42" r="2"/><circle cx="258" cy="29" r="2"/><circle cx="420" cy="57" r="2"/><circle cx="608" cy="33" r="2"/></g></svg>';
   scene.append(landscape);
-  villageBuildings.forEach(b=>{const built=count>=b.need;const spot=document.createElement('button');spot.className='villageBuilding'+(built?' built':'');spot.style.left=b.x+'%';spot.style.top=b.y+'%';spot.setAttribute('aria-label',b.name+(built?', restored':', unlocks at '+b.need+' completed quests'));spot.innerHTML='<span class="buildingRoof"></span><span class="buildingBody"><span>'+ (built?b.icon:'🪵')+'</span><i></i></span><small>'+b.name+'</small>';spot.onclick=()=>modal(b.name,built?b.story:'Complete '+b.need+' quests to restore this part of the village. Every three encounters make one quest.');scene.append(spot);});
-  if(count){const fox=document.createElement('div');fox.className='villageFox';fox.textContent='🦊';fox.setAttribute('aria-label','Pip the rescued fox');scene.append(fox);}
+  villageBuildings.forEach(b=>{const built=count>=b.need||(b.name==='Fox den'&&state.completed['0:0']);const spot=document.createElement('button');spot.className='villageBuilding'+(built?' built':'');spot.style.left=b.x+'%';spot.style.top=b.y+'%';spot.setAttribute('aria-label',b.name+(built?', restored':', unlocks at '+b.need+' completed quests'));spot.innerHTML='<span class="buildingRoof"></span><span class="buildingBody"><span>'+ (built?b.icon:'🪵')+'</span><i></i></span><small>'+b.name+'</small>';spot.onclick=()=>modal(b.name,built?b.story:'Complete '+b.need+' quests to restore this part of the village. Every three encounters make one quest.');scene.append(spot);});
+  if(state.completed['0:0']){const fox=document.createElement('div');fox.className='villageFox';fox.textContent='🦊';fox.setAttribute('aria-label','Pip the rescued fox');scene.append(fox);}
   if(count===36){const flag=document.createElement('div');flag.className='dragonBanner';flag.textContent='🐉 ⚑';scene.append(flag);}
 }
 function applyHeroLook(){
@@ -102,7 +102,8 @@ function capturePracticeWorld(){
 }
 function renderCodeWorld(result=null){
   const scene=el('codeWorldScene'),caption=el('codeWorldCaption');if(!scene)return;
-  const world=capturePracticeWorld();scene.className='codeWorldScene world-'+world.kind;scene.replaceChildren();
+  const world=capturePracticeWorld();
+  if(renderLivePractice(result,world))return;scene.className='codeWorldScene world-'+world.kind;scene.replaceChildren();
   if(!result){scene.textContent=world.kind==='hp'?'🧙 ♥':world.kind==='loop'?'🧙 ✦ ✦ ✦':world.kind==='gate'?'🧙 🚪':world.kind==='bag'?'🎒 📦':'🧙 🪙';caption.textContent='Change the example and run it to see your code affect this scene.';return;}
   if(!result.ok){scene.textContent='🧙 🛠️';caption.textContent='The scene is waiting while you fix the code. No HP lost.';return;}
   const text=(result.stdout||'').trim(),numbers=text.match(/^-?\d+(?:\.\d+)?$/gm)||[],number=numbers.length?Number(numbers[numbers.length-1]):null;
